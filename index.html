@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Maison Rosé — Handcrafted strawberry preserves by Eva Victoria. Delivered across Jakarta." />
+<title>Maison Rosé — Handcrafted Strawberry Preserves · Jakarta</title>
+
+<!-- ============ GOOGLE FONTS ============ -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+<!-- ============ CDN LIBRARIES ============ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/framer-motion@10/dist/framer-motion.js"></script>
+
+<style>
+/* =========================================================
+   1. TOKENS & RESET
+   ========================================================= */
+:root{
+  --blush:#F2C4CE;
+  --cream:#FAF3EE;
+  --gold:#C9A96E;
+  --gold-soft:#E0C68F;
+  --rose:#A0445A;
+  --rose-deep:#7d2e42;
+  --green:#8FAF8C;
+  --bg:#FDF8F5;
+  --ink:#2a1b1f;
+  --ink-soft:#4a3338;
+  --muted:#8a7a7d;
+
+  --ff-display:"Cormorant Garamond", serif;
+  --ff-sub:"Playfair Display", serif;
+  --ff-body:"Jost", "DM Sans", system-ui, sans-serif;
+
+  --shadow-soft:0 20px 60px -20px rgba(160,68,90,.18);
+  --shadow-card:0 30px 80px -30px rgba(160,68,90,.30);
+  --ease-luxe:cubic-bezier(.22,1,.36,1);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+html{scroll-behavior:auto; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility}
+body{
+  font-family:var(--ff-body);
+  color:var(--ink);
+  background:var(--bg);
+  overflow-x:hidden;
+  line-height:1.55;
+  font-weight:400;
+  letter-spacing:.005em;
+}
+img,video{display:block;max-width:100%;height:auto}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* Soft fade for all images when loaded */
+img{opacity:0;transition:opacity .8s ease}
+img.is-loaded{opacity:1}
+
+/* Utility */
+.container{width:min(1240px,92vw);margin-inline:auto}
+.eyebrow{
+  font-family:var(--ff-body);
+  text-transform:uppercase;
+  letter-spacing:.32em;
+  font-size:.72rem;
+  color:var(--gold);
+  font-weight:500;
+}
+.divider-gold{
+  width:60px;height:1px;background:var(--gold);
+  margin:1.25rem auto;opacity:.9;
+}
+.h-display{
+  font-family:var(--ff-display);
+  font-weight:400;
+  line-height:1.02;
+  letter-spacing:-.005em;
+}
+
+/* =========================================================
+   2. PRELOADER
+   ========================================================= */
+#preloader{
+  position:fixed;inset:0;z-index:2000;
+  background:var(--cream);
+  display:grid;place-items:center;
+  transition:opacity .9s var(--ease-luxe), visibility .9s var(--ease-luxe);
+}
+#preloader.hide{opacity:0;visibility:hidden}
+#preloader .pl-mark{
+  font-family:var(--ff-display);
+  font-size:clamp(2.4rem, 6vw, 4.4rem);
+  letter-spacing:.14em;
+  color:var(--rose);
+  background:linear-gradient(90deg,var(--rose),var(--gold),var(--rose));
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-size:200% 100%;
+  animation:plShine 2.2s ease-in-out infinite;
+}
+#preloader .pl-sub{
+  margin-top:14px;
+  font-family:var(--ff-body);font-size:.72rem;
+  letter-spacing:.42em;text-transform:uppercase;
+  color:var(--ink-soft);
+  opacity:0;animation:fadeUp 1.2s .4s var(--ease-luxe) forwards;
+}
+@keyframes plShine{0%{background-position:0 0}100%{background-position:200% 0}}
+@keyframes fadeUp{to{opacity:.7;transform:translateY(0)}from{transform:translateY(6px)}}
+
+/* =========================================================
+   3. CUSTOM CURSOR
+   ========================================================= */
+.cursor-dot,.cursor-ring{
+  position:fixed;top:0;left:0;pointer-events:none;z-index:1500;
+  border-radius:50%;mix-blend-mode:normal;will-change:transform;
+}
+.cursor-dot{
+  width:8px;height:8px;background:var(--gold);
+  transform:translate(-50%,-50%);
+}
+.cursor-ring{
+  width:40px;height:40px;border:1px solid var(--gold);
+  transform:translate(-50%,-50%);
+  transition:width .35s var(--ease-luxe), height .35s var(--ease-luxe),
+             border-color .35s var(--ease-luxe), background .35s var(--ease-luxe),
+             opacity .3s ease;
+}
+.cursor-ring.is-active{width:60px;height:60px;background:rgba(201,169,110,.08)}
+@media (hover:none), (pointer:coarse){
+  .cursor-dot,.cursor-ring{display:none}
+  body{cursor:auto}
+}
+body{cursor:none}
+a,button,.magnetic,.spot-card{cursor:none}
+
+/* =========================================================
+   4. NAVIGATION
+   ========================================================= */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  padding:22px 0;
+  transition:background .5s var(--ease-luxe), padding .5s var(--ease-luxe);
+  mix-blend-mode:normal;
+}
+.nav.is-scrolled{
+  background:rgba(253,248,245,.82);
+  backdrop-filter:blur(14px) saturate(1.2);
+  -webkit-backdrop-filter:blur(14px) saturate(1.2);
+  padding:14px 0;
+  border-bottom:1px solid rgba(201,169,110,.15);
+}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:2rem}
+.brand{
+  font-family:var(--ff-display);
+  font-size:1.3rem;letter-spacing:.22em;
+  color:var(--cream);transition:color .5s;
+  font-weight:500;
+}
+.nav.is-scrolled .brand{color:var(--rose)}
+.nav-links{display:flex;gap:2.25rem;list-style:none}
+.nav-links a{
+  font-size:.78rem;letter-spacing:.22em;
+  text-transform:uppercase;font-weight:400;
+  color:var(--cream);opacity:.85;
+  position:relative;padding:4px 0;
+  transition:color .4s,opacity .4s;
+}
+.nav.is-scrolled .nav-links a{color:var(--ink)}
+.nav-links a::after{
+  content:"";position:absolute;left:0;bottom:-2px;
+  width:0;height:1px;background:var(--gold);
+  transition:width .5s var(--ease-luxe);
+}
+.nav-links a:hover{opacity:1}
+.nav-links a:hover::after{width:100%}
+@media (max-width:760px){.nav-links{display:none}}
+
+/* =========================================================
+   5. HERO — SCROLL-DRIVEN VIDEO
+   ========================================================= */
+.hero{position:relative;height:300vh;background:#0a0507}
+.hero-sticky{
+  position:sticky;top:0;
+  height:100vh;width:100%;overflow:hidden;
+}
+.hero-video{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  opacity:0;transition:opacity 1.2s ease;
+}
+.hero-video.is-ready{opacity:1}
+.hero-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom, rgba(10,5,7,.25) 0%, rgba(10,5,7,.55) 60%, rgba(10,5,7,.7) 100%);
+  z-index:1;
+}
+.hero-content{
+  position:absolute;inset:0;z-index:2;
+  display:grid;place-items:center;text-align:center;
+  padding:0 1.5rem;
+}
+.hero-content-inner{max-width:900px}
+.hero-wordmark{
+  font-family:var(--ff-display);
+  font-weight:400;
+  font-size:clamp(3rem, 10vw, 8rem);
+  letter-spacing:.08em;
+  line-height:1;
+  position:relative;
+  background:linear-gradient(90deg, #E0C68F 0%, #F4E3B9 25%, #C9A96E 50%, #F4E3B9 75%, #E0C68F 100%);
+  background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:goldShift 7s linear infinite;
+}
+@keyframes goldShift{0%{background-position:0 0}100%{background-position:300% 0}}
+.hero-wordmark::after{
+  /* shine sweep */
+  content:attr(data-text);
+  position:absolute;inset:0;
+  background:linear-gradient(110deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-size:250% 100%;
+  animation:shineSweep 4.5s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes shineSweep{
+  0%,15%{background-position:200% 0}
+  60%,100%{background-position:-100% 0}
+}
+.hero-sub{
+  margin-top:1.5rem;
+  font-family:var(--ff-body);
+  color:var(--cream);
+  font-size:clamp(.78rem,1vw,.95rem);
+  letter-spacing:.42em;
+  text-transform:uppercase;
+  font-weight:300;
+  opacity:.92;
+}
+.hero-sub .scroll-float-word{
+  display:inline-block;
+  transform:translateY(20px);
+  opacity:0;
+  transition:transform 1.2s var(--ease-luxe), opacity 1.2s var(--ease-luxe);
+}
+.hero-sub.is-visible .scroll-float-word{
+  transform:translateY(0);opacity:.92;
+}
+.hero .divider-gold{margin:2rem auto}
+.hero-cta{
+  display:inline-flex;align-items:center;gap:.8rem;
+  padding:1.05rem 2.25rem;
+  border:1px solid var(--gold);
+  color:var(--cream);
+  font-family:var(--ff-body);
+  font-size:.76rem;letter-spacing:.34em;text-transform:uppercase;
+  border-radius:999px;
+  transition:background .5s var(--ease-luxe), color .5s var(--ease-luxe), border-color .5s var(--ease-luxe);
+  position:relative;overflow:hidden;
+}
+.hero-cta:hover{background:var(--gold);color:#1a0f12;border-color:var(--gold)}
+.hero-cta .arrow{transition:transform .4s var(--ease-luxe)}
+.hero-cta:hover .arrow{transform:translateX(4px)}
+
+.scroll-hint{
+  position:absolute;bottom:34px;left:50%;transform:translateX(-50%);
+  font-family:var(--ff-body);font-size:.68rem;letter-spacing:.4em;
+  color:var(--cream);opacity:.6;z-index:3;text-transform:uppercase;
+}
+.scroll-hint::after{
+  content:"";display:block;margin:10px auto 0;
+  width:1px;height:34px;background:linear-gradient(var(--gold), transparent);
+  animation:scrollLine 2.2s ease-in-out infinite;
+}
+@keyframes scrollLine{0%,100%{transform:scaleY(.4);opacity:.4}50%{transform:scaleY(1);opacity:1}}
+
+/* =========================================================
+   6. SECTION BASE
+   ========================================================= */
+.section{padding:clamp(5rem, 10vw, 9rem) 0;position:relative}
+.section-head{text-align:center;margin-bottom:4.5rem}
+.section-head h2{
+  font-family:var(--ff-display);
+  font-size:clamp(2.4rem, 5vw, 4.2rem);
+  font-weight:400;line-height:1.05;
+  color:var(--ink);letter-spacing:-.01em;
+}
+.section-head p{
+  margin-top:1.1rem;
+  font-family:var(--ff-body);font-size:.82rem;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--muted);font-weight:400;
+}
+
+/* =========================================================
+   7. STORY SECTION — with Aurora background
+   ========================================================= */
+.story{position:relative;overflow:hidden}
+.aurora{
+  position:absolute;inset:-20%;z-index:0;pointer-events:none;
+  filter:blur(80px);opacity:.6;
+}
+.aurora::before,.aurora::after{
+  content:"";position:absolute;border-radius:50%;
+}
+.aurora::before{
+  width:55vmax;height:55vmax;left:-10%;top:-10%;
+  background:radial-gradient(circle, var(--blush) 0%, transparent 70%);
+  animation:auroraA 18s ease-in-out infinite alternate;
+}
+.aurora::after{
+  width:50vmax;height:50vmax;right:-10%;bottom:-20%;
+  background:radial-gradient(circle, var(--gold-soft) 0%, transparent 70%);
+  animation:auroraB 22s ease-in-out infinite alternate;
+  opacity:.55;
+}
+@keyframes auroraA{0%{transform:translate(0,0) scale(1)}100%{transform:translate(20vw,10vh) scale(1.2)}}
+@keyframes auroraB{0%{transform:translate(0,0) scale(1)}100%{transform:translate(-15vw,-8vh) scale(1.15)}}
+
+.story-grid{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:1.05fr 1fr;gap:6rem;align-items:center;
+}
+@media (max-width:900px){.story-grid{grid-template-columns:1fr;gap:3rem}}
+.story-img{
+  position:relative;aspect-ratio:4/5;overflow:hidden;
+  border-radius:4px;box-shadow:var(--shadow-card);
+}
+.story-img::before{
+  content:"";position:absolute;inset:0;
+  border:1px solid rgba(201,169,110,.35);
+  margin:16px;z-index:2;pointer-events:none;
+}
+.story-img img{width:100%;height:100%;object-fit:cover;transition:transform 1.4s var(--ease-luxe)}
+.story-img:hover img{transform:scale(1.04)}
+
+.story-text .eyebrow{text-align:left;margin-bottom:1.2rem}
+.story-text h2{
+  font-family:var(--ff-display);
+  font-size:clamp(2.4rem, 4.6vw, 4rem);
+  line-height:1.02;font-weight:400;color:var(--ink);
+  margin-bottom:1.8rem;letter-spacing:-.01em;
+}
+.story-text p{
+  font-family:var(--ff-body);
+  font-size:1.02rem;line-height:1.85;color:var(--ink-soft);
+  max-width:48ch;font-weight:300;
+}
+.story-text .signature{
+  margin-top:2.2rem;
+  font-family:var(--ff-display);font-style:italic;
+  font-size:1.5rem;color:var(--rose);
+}
+.story-text .signature::before{content:"— "}
+.bee-decor{
+  margin-top:2rem;display:inline-flex;align-items:center;gap:.8rem;
+  color:var(--gold);font-family:var(--ff-body);
+  font-size:.7rem;letter-spacing:.35em;text-transform:uppercase;
+}
+
+/* SplitText / BlurText / ScrollFloat classes */
+.split-char{
+  display:inline-block;
+  transform:translateY(60%) rotate(4deg);
+  opacity:0;
+}
+.is-revealed .split-char{
+  transform:translateY(0) rotate(0);opacity:1;
+  transition:transform .9s var(--ease-luxe), opacity .9s var(--ease-luxe);
+}
+.blur-text{
+  filter:blur(14px);opacity:0;
+  transform:translateY(18px);
+  transition:filter 1.1s var(--ease-luxe), opacity 1.1s var(--ease-luxe), transform 1.1s var(--ease-luxe);
+}
+.blur-text.is-revealed{filter:blur(0);opacity:1;transform:translateY(0)}
+
+.scroll-float .float-word{
+  display:inline-block;
+  transform:translateY(40px);opacity:0;
+  transition:transform .9s var(--ease-luxe), opacity .9s var(--ease-luxe);
+}
+.scroll-float.is-revealed .float-word{transform:translateY(0);opacity:1}
+
+/* =========================================================
+   8. PRODUCT SECTION
+   ========================================================= */
+.products{background:var(--bg);position:relative}
+.product-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2.2rem;
+}
+@media (max-width:980px){.product-grid{grid-template-columns:1fr;gap:2.5rem;max-width:440px;margin:0 auto}}
+
+.spot-card{
+  position:relative;
+  background:var(--cream);
+  border-radius:6px;
+  padding:0;
+  overflow:hidden;
+  transform-style:preserve-3d;
+  transition:transform .6s var(--ease-luxe), box-shadow .6s var(--ease-luxe);
+  box-shadow:var(--shadow-soft);
+  will-change:transform;
+}
+.spot-card:hover{box-shadow:var(--shadow-card)}
+.spot-card::before{
+  /* spotlight */
+  content:"";
+  position:absolute;inset:0;
+  background:radial-gradient(400px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(201,169,110,.22), transparent 45%);
+  opacity:0;transition:opacity .5s;
+  pointer-events:none;z-index:3;
+}
+.spot-card:hover::before{opacity:1}
+.spot-card::after{
+  content:"";position:absolute;inset:14px;
+  border:1px solid rgba(201,169,110,.2);
+  border-radius:4px;pointer-events:none;z-index:2;
+}
+.spot-card .card-img{
+  position:relative;aspect-ratio:4/5;overflow:hidden;
+}
+.spot-card .card-img img{
+  width:100%;height:100%;object-fit:cover;
+  transition:transform 1.2s var(--ease-luxe);
+}
+.spot-card:hover .card-img img{transform:scale(1.06)}
+.spot-card .card-body{padding:1.8rem 1.6rem 2rem;text-align:center;position:relative;z-index:2}
+.spot-card .tag{
+  font-size:.68rem;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--gold);font-weight:500;
+}
+.spot-card h3{
+  font-family:var(--ff-sub);font-weight:500;
+  font-size:1.45rem;margin:.55rem 0 .35rem;color:var(--ink);
+}
+.spot-card .desc{
+  font-family:var(--ff-display);font-style:italic;
+  color:var(--ink-soft);font-size:1.02rem;margin-bottom:1.2rem;
+}
+.spot-card .order-btn{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;
+  padding:.9rem 1.6rem;border:1px solid var(--rose);
+  border-radius:999px;color:var(--rose);
+  transition:background .5s, color .5s;
+}
+.spot-card .order-btn:hover{background:var(--rose);color:var(--cream)}
+.spot-card .order-btn .arrow{transition:transform .4s var(--ease-luxe)}
+.spot-card .order-btn:hover .arrow{transform:translateX(4px)}
+
+/* =========================================================
+   9. INFINITE TICKER
+   ========================================================= */
+.ticker{
+  margin-top:5rem;
+  background:var(--rose);
+  border-top:1px solid var(--gold);
+  border-bottom:1px solid var(--gold);
+  overflow:hidden;padding:1.4rem 0;position:relative;
+}
+.ticker-track{
+  display:flex;gap:1.5rem;width:max-content;
+  animation:tickerScroll 35s linear infinite;
+}
+.ticker-item{
+  width:260px;height:180px;flex:0 0 auto;overflow:hidden;border-radius:2px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+.ticker-item img{width:100%;height:100%;object-fit:cover}
+@keyframes tickerScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* =========================================================
+   10. TESTIMONIALS — with Silk background
+   ========================================================= */
+.testimonials{
+  position:relative;overflow:hidden;background:var(--cream);
+}
+.silk{
+  position:absolute;inset:0;z-index:0;opacity:.7;pointer-events:none;
+}
+.silk svg{width:100%;height:100%;display:block}
+.silk .silk-a,.silk .silk-b{
+  mix-blend-mode:multiply;opacity:.35;
+}
+.silk .silk-a{animation:silkA 20s ease-in-out infinite alternate}
+.silk .silk-b{animation:silkB 24s ease-in-out infinite alternate}
+@keyframes silkA{0%{transform:translate(0,0) scale(1)}100%{transform:translate(3%,2%) scale(1.08)}}
+@keyframes silkB{0%{transform:translate(0,0) scale(1.05)}100%{transform:translate(-2%,-3%) scale(1)}}
+
+.testimonial-wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;text-align:center}
+.testimonial-wrap h2{
+  font-family:var(--ff-display);font-weight:400;
+  font-size:clamp(2.4rem,5vw,4.2rem);
+  background:linear-gradient(90deg, var(--gold) 0%, var(--gold-soft) 50%, var(--gold) 100%);
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:goldShift 7s linear infinite;
+}
+.testimonial-list{margin-top:4rem;display:flex;flex-direction:column;gap:3rem}
+.testimonial{
+  opacity:0;transform:translateY(40px);
+  transition:opacity 1s var(--ease-luxe), transform 1s var(--ease-luxe);
+  padding:2.6rem 2rem;
+  background:rgba(253,248,245,.7);
+  backdrop-filter:blur(6px);
+  border:1px solid rgba(201,169,110,.25);
+  border-radius:4px;
+  position:relative;
+}
+.testimonial.is-visible{opacity:1;transform:translateY(0)}
+.testimonial .mark{
+  font-family:var(--ff-display);
+  font-size:5rem;line-height:1;color:var(--gold);
+  position:absolute;top:18px;left:26px;opacity:.55;
+}
+.testimonial .stars{
+  color:var(--gold);letter-spacing:.25em;font-size:.9rem;margin-bottom:1rem;
+}
+.testimonial blockquote{
+  font-family:var(--ff-display);font-style:italic;
+  font-size:clamp(1.15rem,1.8vw,1.4rem);
+  line-height:1.55;color:var(--ink);
+  max-width:56ch;margin:0 auto 1.4rem;font-weight:400;
+}
+.testimonial .who{
+  font-family:var(--ff-sub);
+  font-size:1rem;color:var(--rose);letter-spacing:.08em;
+}
+
+/* =========================================================
+   11. CAFÉ SECTION
+   ========================================================= */
+.cafe{
+  position:relative;min-height:100vh;
+  display:grid;place-items:center;
+  overflow:hidden;padding:6rem 0;
+}
+.cafe-bg{
+  position:absolute;inset:0;z-index:0;
+}
+.cafe-bg img{
+  width:100%;height:100%;object-fit:cover;
+  transform:scale(1.08);
+  will-change:transform;
+}
+.cafe-bg::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom, rgba(10,5,7,.55), rgba(10,5,7,.78));
+}
+.cafe-content{
+  position:relative;z-index:2;text-align:center;color:var(--cream);
+  max-width:880px;padding:0 1.5rem;
+}
+.badge-coming{
+  display:inline-flex;align-items:center;gap:.65rem;
+  padding:.55rem 1.3rem;border:1px solid var(--gold);
+  border-radius:999px;color:var(--gold);
+  font-size:.7rem;letter-spacing:.36em;text-transform:uppercase;
+  animation:pulseGold 3s ease-in-out infinite;
+  margin-bottom:2rem;
+}
+.badge-coming .dot{
+  width:6px;height:6px;border-radius:50%;background:var(--gold);
+  box-shadow:0 0 0 0 var(--gold);
+  animation:dotPulse 2s ease-in-out infinite;
+}
+@keyframes pulseGold{0%,100%{box-shadow:0 0 0 0 rgba(201,169,110,.35)}50%{box-shadow:0 0 30px 8px rgba(201,169,110,.08)}}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,169,110,.7)}50%{box-shadow:0 0 0 8px rgba(201,169,110,0)}}
+
+.cafe-sign{
+  width:clamp(140px, 22vw, 220px);
+  aspect-ratio:1/1;margin:0 auto 2rem;
+  overflow:hidden;border-radius:50%;
+  border:1px solid rgba(201,169,110,.4);
+  box-shadow:0 0 60px rgba(201,169,110,.15);
+}
+.cafe-sign img{width:100%;height:100%;object-fit:cover}
+.cafe-content h2{
+  font-family:var(--ff-display);font-weight:400;
+  font-size:clamp(2.8rem,6vw,5rem);line-height:1;letter-spacing:-.005em;
+  margin-bottom:.9rem;
+}
+.cafe-sub{
+  font-family:var(--ff-body);font-size:.78rem;letter-spacing:.5em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:2rem;
+}
+.cafe-desc{
+  font-family:var(--ff-display);font-size:clamp(1.1rem,1.5vw,1.3rem);
+  font-style:italic;line-height:1.7;max-width:52ch;margin:0 auto 2rem;
+  color:rgba(250,243,238,.92);font-weight:300;
+}
+.cafe-address{
+  display:inline-flex;align-items:center;gap:.7rem;
+  font-family:var(--ff-body);font-size:.84rem;letter-spacing:.18em;
+  color:var(--cream);padding:.8rem 1.4rem;
+  border:1px solid rgba(201,169,110,.35);border-radius:999px;
+}
+.cafe-address svg{flex:0 0 auto;color:var(--gold)}
+
+/* =========================================================
+   12. ORIGIN / PROCESS SECTION
+   ========================================================= */
+.origin{
+  position:relative;padding:0;min-height:120vh;
+  display:grid;place-items:center;overflow:hidden;
+  background:#1a0f12;
+}
+.origin-bg{
+  position:absolute;inset:0;z-index:0;
+  display:grid;grid-template-columns:1fr 1fr;
+}
+.origin-bg .half{position:relative;overflow:hidden}
+.origin-bg .half img{
+  width:100%;height:120%;object-fit:cover;
+  will-change:transform;
+}
+.origin-bg::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom, rgba(10,5,7,.45), rgba(10,5,7,.65));
+  pointer-events:none;
+}
+@media (max-width:760px){.origin-bg{grid-template-columns:1fr;grid-template-rows:1fr 1fr}}
+.origin-content{
+  position:relative;z-index:2;text-align:center;color:var(--cream);padding:0 1.5rem;
+  display:flex;flex-direction:column;align-items:center;gap:1rem;
+}
+.origin-content .eyebrow{color:var(--gold);margin-bottom:1.5rem;display:block}
+.shiny-heading{
+  font-family:var(--ff-display);font-weight:400;
+  font-size:clamp(2.6rem,5.5vw,4.6rem);line-height:1;
+  color:var(--cream);position:relative;display:inline-block;letter-spacing:-.005em;
+}
+.shiny-heading::after{
+  content:attr(data-text);
+  position:absolute;inset:0;
+  background:linear-gradient(110deg, transparent 35%, rgba(201,169,110,.9) 50%, transparent 65%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-size:250% 100%;
+  animation:shineSweep 5s ease-in-out infinite;
+}
+.origin-pill{
+  margin-top:2.4rem;display:inline-block;
+  background:rgba(10,5,7,.55);backdrop-filter:blur(8px);
+  border:1px solid rgba(201,169,110,.3);
+  padding:1.3rem 2.2rem;border-radius:999px;
+  font-family:var(--ff-display);font-style:italic;
+  font-size:clamp(1.05rem,1.5vw,1.3rem);
+  color:var(--cream);max-width:48ch;
+}
+
+/* =========================================================
+   13. CONTACT / ORDER SECTION
+   ========================================================= */
+.contact{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg, #1a0f12 0%, #2a1118 60%, #3b1820 100%);
+  color:var(--cream);
+}
+.aurora-dark{
+  position:absolute;inset:-20%;z-index:0;pointer-events:none;
+  filter:blur(100px);opacity:.55;
+}
+.aurora-dark::before,.aurora-dark::after{content:"";position:absolute;border-radius:50%}
+.aurora-dark::before{
+  width:50vmax;height:50vmax;left:-10%;top:-10%;
+  background:radial-gradient(circle, var(--rose) 0%, transparent 60%);
+  animation:auroraA 20s ease-in-out infinite alternate;
+}
+.aurora-dark::after{
+  width:48vmax;height:48vmax;right:-15%;bottom:-20%;
+  background:radial-gradient(circle, var(--gold) 0%, transparent 65%);
+  animation:auroraB 24s ease-in-out infinite alternate;opacity:.4;
+}
+
+.contact-inner{position:relative;z-index:1;text-align:center;max-width:720px;margin:0 auto}
+.contact h2{
+  font-family:var(--ff-display);font-weight:400;
+  font-size:clamp(2.6rem,5.5vw,4.6rem);line-height:1;margin-bottom:.8rem;
+  background:linear-gradient(90deg,#E0C68F,#F4E3B9,#C9A96E,#F4E3B9,#E0C68F);
+  background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:goldShift 7s linear infinite;
+}
+.contact-sub{
+  font-family:var(--ff-body);font-size:.78rem;letter-spacing:.4em;
+  text-transform:uppercase;color:rgba(250,243,238,.8);margin-bottom:3rem;
+}
+.wa-btn{
+  display:inline-flex;align-items:center;gap:.9rem;
+  padding:1.1rem 2.2rem;
+  background:var(--gold);color:#1a0f12;
+  font-family:var(--ff-body);font-size:.82rem;
+  letter-spacing:.22em;text-transform:uppercase;font-weight:500;
+  border-radius:999px;
+  box-shadow:0 20px 50px -15px rgba(201,169,110,.55);
+  transition:transform .4s var(--ease-luxe), box-shadow .4s var(--ease-luxe);
+}
+.wa-btn:hover{transform:translateY(-2px);box-shadow:0 28px 60px -15px rgba(201,169,110,.7)}
+.wa-small{
+  margin-top:1.2rem;font-family:var(--ff-display);font-style:italic;
+  color:rgba(250,243,238,.85);font-size:1.05rem;
+}
+
+.ornament{
+  display:flex;align-items:center;gap:1.2rem;
+  justify-content:center;margin:3rem 0 2rem;color:var(--gold);
+}
+.ornament .line{flex:1;max-width:120px;height:1px;background:var(--gold);opacity:.55}
+.ornament svg{opacity:.85}
+
+.contact-logo{
+  width:140px;height:140px;margin:0 auto;
+  border-radius:50%;overflow:hidden;
+  border:1px solid rgba(201,169,110,.35);
+  opacity:0;transform:translateY(20px);
+  transition:opacity 1.2s var(--ease-luxe), transform 1.2s var(--ease-luxe);
+}
+.contact-logo.is-visible{opacity:1;transform:translateY(0)}
+.contact-logo img{width:100%;height:100%;object-fit:cover}
+
+/* =========================================================
+   14. FOOTER
+   ========================================================= */
+.footer{
+  background:var(--cream);padding:3rem 0 2.5rem;
+  border-top:1px solid var(--rose);
+  text-align:center;color:var(--ink-soft);
+}
+.footer .wordmark{
+  font-family:var(--ff-display);
+  font-size:1.35rem;letter-spacing:.32em;
+  color:var(--rose);margin-bottom:.7rem;
+}
+.footer .tag{
+  font-family:var(--ff-body);font-size:.72rem;
+  letter-spacing:.32em;text-transform:uppercase;
+  color:var(--muted);
+}
+.footer .bee{margin:1.2rem 0;color:var(--gold);display:inline-block}
+.footer .meta{
+  margin-top:.8rem;font-size:.75rem;letter-spacing:.14em;
+  color:var(--muted);
+}
+
+/* =========================================================
+   15. REVEAL & RESPONSIVE
+   ========================================================= */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity 1s var(--ease-luxe), transform 1s var(--ease-luxe)}
+.reveal.is-visible{opacity:1;transform:translateY(0)}
+
+@media (max-width:760px){
+  .nav-inner{padding:0 1rem}
+  .section{padding:5rem 0}
+  .section-head{margin-bottom:3rem}
+  .ticker-item{width:200px;height:140px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ PRELOADER ============ -->
+<div id="preloader" aria-hidden="true">
+  <div>
+    <div class="pl-mark">Maison Rosé</div>
+    <div class="pl-sub">Handcrafted · Jakarta</div>
+  </div>
+</div>
+
+<!-- ============ CUSTOM CURSOR ============ -->
+<div class="cursor-ring" aria-hidden="true"></div>
+<div class="cursor-dot" aria-hidden="true"></div>
+
+<!-- ============ NAVIGATION ============ -->
+<nav class="nav" id="nav">
+  <div class="container nav-inner">
+    <a href="#top" class="brand">Maison Rosé</a>
+    <ul class="nav-links">
+      <li><a href="#story">Story</a></li>
+      <li><a href="#products">Preserve</a></li>
+      <li><a href="#cafe">Café</a></li>
+      <li><a href="#contact">Order</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main id="top">
+
+<!-- =========================================================
+     SECTION 1 — HERO (scroll-driven video)
+     ========================================================= -->
+<section class="hero" id="hero">
+  <div class="hero-sticky">
+    <video class="hero-video" id="heroVideo"
+           muted playsinline preload="auto" webkit-playsinline disablePictureInPicture>
+      <source src="./video/pour-jam.mp4" type="video/mp4" />
+    </video>
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+      <div class="hero-content-inner">
+        <h1 class="hero-wordmark" data-text="MAISON ROSÉ">MAISON ROSÉ</h1>
+        <p class="hero-sub scroll-float" id="heroSub">
+          <span class="scroll-float-word">Handcrafted</span>
+          <span class="scroll-float-word">&nbsp;Strawberry</span>
+          <span class="scroll-float-word">&nbsp;Preserves</span>
+          <span class="scroll-float-word">&nbsp;·</span>
+          <span class="scroll-float-word">&nbsp;Jakarta</span>
+        </p>
+        <div class="divider-gold"></div>
+        <a href="#story" class="hero-cta magnetic" data-magnetic="22">
+          <span>Discover Our Story</span>
+          <span class="arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="scroll-hint">Scroll</div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SECTION 2 — STORY
+     ========================================================= -->
+<section class="section story" id="story">
+  <div class="aurora" aria-hidden="true"></div>
+  <div class="container story-grid">
+    <div class="story-img reveal">
+      <img data-src="./images/photo_8.jpg" alt="Eva Victoria cooking strawberry preserves in copper pan" />
+    </div>
+    <div class="story-text">
+      <span class="eyebrow reveal">Our Founder</span>
+      <h2 class="h-display split-reveal" data-split>Made with love. Made by hand.</h2>
+      <p class="reveal">
+        Maison Rosé was born from Eva Victoria's obsession with one perfect thing —
+        strawberries at peak ripeness, transformed slowly over an open flame into something
+        that tastes like a memory. No shortcuts. No preservatives. Just fruit, sugar, and time.
+      </p>
+      <div class="signature reveal">Eva Victoria</div>
+      <div class="bee-decor reveal" aria-hidden="true">
+        <!-- Bee SVG -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+          <ellipse cx="12" cy="13" rx="4.5" ry="6" />
+          <path d="M12 8v10M8 9l-3-3M16 9l3-3M9 11h6M9 14h6" />
+          <ellipse cx="7" cy="8" rx="3" ry="1.8" transform="rotate(-30 7 8)" />
+          <ellipse cx="17" cy="8" rx="3" ry="1.8" transform="rotate(30 17 8)" />
+        </svg>
+        <span>Handmade · Jakarta</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SECTION 3 — THE PRESERVE
+     ========================================================= -->
+<section class="section products" id="products">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow reveal">The Preserve</span>
+      <h2 class="h-display blur-text" data-blur>The Preserve</h2>
+      <p class="reveal">100% Natural · Zero Preservatives · Delivered Across Jakarta</p>
+    </div>
+
+    <div class="product-grid">
+      <!-- Card 1 -->
+      <article class="spot-card tilt" data-tilt>
+        <div class="card-img">
+          <img data-src="./images/photo_4.jpg" alt="Maison Rosé strawberry preserve jar with pink bow" />
+        </div>
+        <div class="card-body">
+          <div class="tag">Signature</div>
+          <h3>Strawberry Preserve</h3>
+          <p class="desc">200ml · Made with love</p>
+          <a href="#contact" class="order-btn magnetic" data-magnetic="14">
+            <span>Order Now</span><span class="arrow">→</span>
+          </a>
+        </div>
+      </article>
+
+      <!-- Card 2 -->
+      <article class="spot-card tilt" data-tilt>
+        <div class="card-img">
+          <img data-src="./images/photo_3.jpg" alt="Three jars of Maison Rosé preserve" />
+        </div>
+        <div class="card-body">
+          <div class="tag">Limited</div>
+          <h3>Signature Jar</h3>
+          <p class="desc">Limited edition release</p>
+          <a href="#contact" class="order-btn magnetic" data-magnetic="14">
+            <span>Order Now</span><span class="arrow">→</span>
+          </a>
+        </div>
+      </article>
+
+      <!-- Card 3 -->
+      <article class="spot-card tilt" data-tilt>
+        <div class="card-img">
+          <img data-src="./images/photo_7.jpg" alt="Maison Rosé gift box with preserve jar and tea" />
+        </div>
+        <div class="card-body">
+          <div class="tag">Gift</div>
+          <h3>Gift Set</h3>
+          <p class="desc">Perfect for gifting</p>
+          <a href="#contact" class="order-btn magnetic" data-magnetic="14">
+            <span>Order Now</span><span class="arrow">→</span>
+          </a>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <!-- Infinite ticker -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <div class="ticker-item"><img data-src="./images/photo_4.jpg" alt="" /></div>
+      <div class="ticker-item"><img data-src="./images/photo_3.jpg" alt="" /></div>
+      <div class="ticker-item"><img data-src="./images/photo_7.jpg" alt="" /></div>
+      <div class="ticker-item"><img data-src="./images/photo_9.jpg" alt="" /></div>
+      <div class="ticker-item"><img data-src="./images/photo_8.jpg" alt="" /></div>
+      <div class="ticker-item"><img data-src="./images/photo_12.jpg" alt="" /></div>
+      <!-- duplicate for seamless loop -->
+      <div class="ticker-item"><img data-src="./images/photo_4.jpg" alt="" /></div>
+      <div class="ticker-item"><img data-src="./images/photo_3.jpg" alt="" /></div>
+      <div class="ticker-item"><img data-src="./images/photo_7.jpg" alt="" /></div>
+      <div class="ticker-item"><img data-src="./images/photo_9.jpg" alt="" /></div>
+      <div class="ticker-item"><img data-src="./images/photo_8.jpg" alt="" /></div>
+      <div class="ticker-item"><img data-src="./images/photo_12.jpg" alt="" /></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SECTION 4 — TESTIMONIALS
+     ========================================================= -->
+<section class="section testimonials" id="testimonials">
+  <!-- Silk fluid background -->
+  <div class="silk" aria-hidden="true">
+    <svg viewBox="0 0 1440 720" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="silkGradA" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0%" stop-color="#F2C4CE" stop-opacity=".9"/>
+          <stop offset="100%" stop-color="#FAF3EE" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="silkGradB" x1="0" x2="1" y1="1" y2="0">
+          <stop offset="0%" stop-color="#E0C68F" stop-opacity=".65"/>
+          <stop offset="100%" stop-color="#FAF3EE" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path class="silk-a" fill="url(#silkGradA)"
+        d="M0,300 C300,180 600,420 900,300 C1200,180 1350,330 1440,300 L1440,720 L0,720 Z" />
+      <path class="silk-b" fill="url(#silkGradB)"
+        d="M0,420 C280,330 520,540 820,420 C1120,300 1320,450 1440,420 L1440,720 L0,720 Z" />
+    </svg>
+  </div>
+
+  <div class="container testimonial-wrap">
+    <span class="eyebrow reveal">Testimonials</span>
+    <h2 class="reveal">Loved by Jakarta</h2>
+    <div class="testimonial-list" id="testimonialList">
+      <div class="testimonial">
+        <div class="mark">“</div>
+        <div class="stars">★★★★★</div>
+        <blockquote>
+          This is the most beautiful jar of jam I have ever held. The taste is extraordinary —
+          you can feel that it's made with real care. Maison Rosé is something special.
+        </blockquote>
+        <div class="who">Jessica</div>
+      </div>
+      <div class="testimonial">
+        <div class="mark">“</div>
+        <div class="stars">★★★★★</div>
+        <blockquote>
+          I ordered as a gift and ended up keeping it for myself. Pure, natural, and luxurious.
+          Eva's jam is unlike anything you find in stores.
+        </blockquote>
+        <div class="who">Hidi</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SECTION 5 — CAFÉ
+     ========================================================= -->
+<section class="cafe" id="cafe">
+  <div class="cafe-bg">
+    <img data-src="./images/photo_6.jpg" alt="Maison Rosé café storefront" id="cafeBgImg" />
+  </div>
+  <div class="cafe-content">
+    <span class="badge-coming reveal"><span class="dot"></span>Coming Soon</span>
+    <div class="cafe-sign reveal"><img data-src="./images/photo_9.jpg" alt="Maison Rosé illuminated signage" /></div>
+    <h2 class="h-display split-reveal" data-split>Maison Rosé Café</h2>
+    <div class="cafe-sub reveal">Café · Preserves · Patisserie</div>
+    <p class="cafe-desc reveal">
+      A place where time slows down. Our café opens soon in the heart of Jakarta —
+      where you can sit with a cup of something warm, a fresh-baked pastry, and a jar
+      of our preserves to take home.
+    </p>
+    <div class="cafe-address reveal">
+      <!-- Map pin SVG -->
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11z" />
+        <circle cx="12" cy="10" r="2.5" />
+      </svg>
+      <span>Jl. Kemang Raya No. 18, Kebayoran Baru, Jakarta Selatan</span>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SECTION 6 — ORIGIN / PROCESS
+     ========================================================= -->
+<section class="origin" id="origin">
+  <div class="origin-bg" aria-hidden="true">
+    <div class="half"><img data-src="./images/photo_11.jpg" alt="" id="originLeft" /></div>
+    <div class="half"><img data-src="./images/photo_12.jpg" alt="" id="originRight" /></div>
+  </div>
+  <div class="origin-content">
+    <span class="eyebrow reveal">The Process</span>
+    <h2 class="shiny-heading reveal" data-text="The Process">The Process</h2>
+    <div class="origin-pill reveal">
+      From field to jar. Every strawberry is chosen by hand.
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SECTION 7 — CONTACT / ORDER
+     ========================================================= -->
+<section class="section contact" id="contact">
+  <div class="aurora-dark" aria-hidden="true"></div>
+  <div class="container contact-inner">
+    <span class="eyebrow reveal">Order</span>
+    <h2 class="reveal">Order Your Jar</h2>
+    <div class="contact-sub reveal">Delivery available across all of Jakarta</div>
+
+    <a href="https://wa.me/6222813374568" class="wa-btn magnetic" data-magnetic="20"
+       target="_blank" rel="noopener noreferrer">
+      <!-- WhatsApp SVG -->
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor">
+        <path d="M16 3C9 3 3.4 8.6 3.4 15.6c0 2.5.7 4.9 2 7L3 29l6.6-2.3c2 .9 4.2 1.3 6.4 1.3 7 0 12.6-5.6 12.6-12.6S23 3 16 3zm7.4 17.9c-.3.8-1.7 1.5-2.4 1.6-.6 0-1.4.1-2.3-.1-.5-.2-1.2-.4-2.1-.8-3.7-1.6-6.1-5.3-6.3-5.6-.2-.3-1.5-2-1.5-3.8 0-1.8.9-2.7 1.3-3.1.3-.3.8-.4 1-.4h.7c.2 0 .6-.1.9.7.3.8 1.1 2.7 1.2 2.9.1.2.1.4 0 .6-.1.2-.2.4-.4.6-.2.2-.4.4-.5.6-.2.2-.4.4-.2.8.2.4 1 1.7 2.2 2.7 1.5 1.3 2.8 1.7 3.2 1.9.4.2.6.2.8-.1.2-.2.9-1.1 1.1-1.4.2-.4.5-.3.8-.2.3.1 2.1 1 2.5 1.2.4.2.6.3.7.4.1.2.1.9-.2 1.6z"/>
+      </svg>
+      <span>+62 228 1337 4568</span>
+    </a>
+    <p class="wa-small reveal">Message us to place your order</p>
+
+    <!-- Ornament divider -->
+    <div class="ornament reveal">
+      <span class="line"></span>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <path d="M12 3 L14 10 L21 12 L14 14 L12 21 L10 14 L3 12 L10 10 Z" />
+      </svg>
+      <span class="line"></span>
+    </div>
+
+    <div class="contact-logo reveal" id="contactLogo">
+      <img data-src="./images/photo_5.jpg" alt="Maison Rosé emblem" />
+    </div>
+
+    <div class="ornament reveal">
+      <span class="line"></span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+      <span class="line"></span>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="container">
+    <div class="wordmark">MAISON ROSÉ</div>
+    <div class="tag">Handcrafted in Jakarta · Made with Love</div>
+    <div class="bee" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <ellipse cx="12" cy="13" rx="4.5" ry="6"/>
+        <path d="M12 8v10M9 11h6M9 14h6"/>
+        <ellipse cx="7" cy="8" rx="3" ry="1.8" transform="rotate(-30 7 8)"/>
+        <ellipse cx="17" cy="8" rx="3" ry="1.8" transform="rotate(30 17 8)"/>
+      </svg>
+    </div>
+    <div class="meta">© 2025 Maison Rosé. All rights reserved.</div>
+    <div class="meta" style="margin-top:.3rem">+62 228 1337 4568</div>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   A. PRELOADER
+   ========================================================= */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const pl = document.getElementById('preloader');
+    pl.classList.add('hide');
+    setTimeout(() => pl.remove(), 900);
+  }, 1500);
+});
+
+/* =========================================================
+   B. IMAGE LAZY + FADE-IN
+   ========================================================= */
+(function initImages(){
+  const imgs = document.querySelectorAll('img[data-src]');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        const img = e.target;
+        img.src = img.dataset.src;
+        img.onload = () => img.classList.add('is-loaded');
+        img.onerror = () => img.classList.add('is-loaded');
+        io.unobserve(img);
+      }
+    });
+  }, {rootMargin:'200px'});
+  imgs.forEach(img => io.observe(img));
+})();
+
+/* =========================================================
+   C. CUSTOM CURSOR (dot + ring with lerp)
+   ========================================================= */
+(function initCursor(){
+  if(matchMedia('(hover:none)').matches) return;
+  const dot  = document.querySelector('.cursor-dot');
+  const ring = document.querySelector('.cursor-ring');
+  let mx = innerWidth/2, my = innerHeight/2;
+  let rx = mx, ry = my;
+  window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function tick(){
+    rx += (mx - rx) * 0.15;
+    ry += (my - ry) * 0.15;
+    dot.style.transform  = `translate(${mx}px,${my}px) translate(-50%,-50%)`;
+    ring.style.transform = `translate(${rx}px,${ry}px) translate(-50%,-50%)`;
+    requestAnimationFrame(tick);
+  }
+  tick();
+  document.querySelectorAll('a,button,.magnetic,.spot-card').forEach(el => {
+    el.addEventListener('mouseenter', () => ring.classList.add('is-active'));
+    el.addEventListener('mouseleave', () => ring.classList.remove('is-active'));
+  });
+})();
+
+/* =========================================================
+   D. LENIS SMOOTH SCROLL
+   ========================================================= */
+const lenis = new Lenis({
+  duration:1.25,
+  easing:t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+  smoothWheel:true,
+  smoothTouch:false,
+  wheelMultiplier:1,
+});
+function raf(time){ lenis.raf(time); requestAnimationFrame(raf); }
+requestAnimationFrame(raf);
+
+/* Sync GSAP ScrollTrigger with Lenis */
+if (window.gsap && window.ScrollTrigger){
+  gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add((time) => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
+}
+
+/* Nav anchor links through Lenis */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const id = a.getAttribute('href');
+    if(id.length > 1 && document.querySelector(id)){
+      e.preventDefault();
+      lenis.scrollTo(id, {offset:0});
+    }
+  });
+});
+
+/* =========================================================
+   E. NAV SCROLL STATE
+   ========================================================= */
+(function initNav(){
+  const nav = document.getElementById('nav');
+  lenis.on('scroll', ({scroll}) => {
+    if(scroll > 80) nav.classList.add('is-scrolled');
+    else nav.classList.remove('is-scrolled');
+  });
+})();
+
+/* =========================================================
+   F. HERO SCROLL-DRIVEN VIDEO
+   ========================================================= */
+(function initHeroVideo(){
+  const video = document.getElementById('heroVideo');
+  const hero  = document.getElementById('hero');
+  const subEl = document.getElementById('heroSub');
+
+  video.pause();
+
+  let duration = 0;
+  let ready    = false;
+
+  function onReady(){
+    if(ready) return;
+    if(!isFinite(video.duration) || video.duration <= 0) return;
+    duration = video.duration;
+    ready = true;
+    video.classList.add('is-ready');
+  }
+  video.addEventListener('loadedmetadata', onReady);
+  video.addEventListener('loadeddata', onReady);
+  video.addEventListener('canplay', onReady);
+
+  // Scroll-driven playback
+  gsap.to({}, {
+    scrollTrigger:{
+      trigger:hero,
+      start:'top top',
+      end:'bottom bottom',
+      scrub:true,
+      onUpdate:(self) => {
+        if(!ready) return;
+        const t = Math.max(0, Math.min(duration, self.progress * duration));
+        // Guard against Safari readyState quirks
+        try { if(Math.abs(video.currentTime - t) > 0.02) video.currentTime = t; } catch(err) {}
+      }
+    }
+  });
+
+  // Float subtitle when hero enters
+  ScrollTrigger.create({
+    trigger:hero, start:'top 90%',
+    onEnter:() => subEl.classList.add('is-visible'),
+  });
+})();
+
+/* =========================================================
+   G. SPLIT-TEXT HEADINGS (GSAP stagger)
+   ========================================================= */
+(function initSplitText(){
+  document.querySelectorAll('[data-split]').forEach(el => {
+    const words = el.textContent.trim().split(/\s+/);
+    el.innerHTML = words.map(w =>
+      `<span class="split-word" style="display:inline-block;white-space:nowrap">${
+        [...w].map(c => `<span class="split-char">${c}</span>`).join('')
+      }</span>`
+    ).join(' ');
+    const chars = el.querySelectorAll('.split-char');
+    gsap.to(chars, {
+      y:0, opacity:1, rotate:0,
+      duration:.9, ease:'power3.out',
+      stagger:.02,
+      scrollTrigger:{ trigger:el, start:'top 85%' }
+    });
+  });
+})();
+
+/* =========================================================
+   H. BLUR TEXT REVEAL
+   ========================================================= */
+(function initBlurText(){
+  document.querySelectorAll('[data-blur], .blur-text').forEach(el => {
+    el.classList.add('blur-text');
+    ScrollTrigger.create({
+      trigger:el, start:'top 85%',
+      onEnter:() => el.classList.add('is-revealed')
+    });
+  });
+})();
+
+/* =========================================================
+   I. GENERIC REVEAL
+   ========================================================= */
+(function initReveal(){
+  document.querySelectorAll('.reveal').forEach(el => {
+    ScrollTrigger.create({
+      trigger:el, start:'top 88%',
+      onEnter:() => el.classList.add('is-visible')
+    });
+  });
+})();
+
+/* =========================================================
+   J. TESTIMONIAL ANIMATED LIST
+   ========================================================= */
+(function initTestimonials(){
+  const items = document.querySelectorAll('#testimonialList .testimonial');
+  ScrollTrigger.create({
+    trigger:'#testimonialList',
+    start:'top 80%',
+    onEnter:() => {
+      items.forEach((el, i) => {
+        setTimeout(() => el.classList.add('is-visible'), i * 420);
+      });
+    }
+  });
+})();
+
+/* =========================================================
+   K. TILT + SPOTLIGHT ON PRODUCT CARDS
+   ========================================================= */
+(function initTilt(){
+  const cards = document.querySelectorAll('.tilt');
+  cards.forEach(card => {
+    let rect;
+    card.addEventListener('mouseenter', () => { rect = card.getBoundingClientRect(); });
+    card.addEventListener('mousemove', e => {
+      if(!rect) rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const px = x / rect.width;
+      const py = y / rect.height;
+      const rotY = (px - .5) * 8;   // degrees
+      const rotX = (.5 - py) * 8;
+      card.style.transform = `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-4px)`;
+      card.style.setProperty('--mx', (px * 100) + '%');
+      card.style.setProperty('--my', (py * 100) + '%');
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+})();
+
+/* =========================================================
+   L. MAGNETIC BUTTONS
+   ========================================================= */
+(function initMagnetic(){
+  const els = document.querySelectorAll('.magnetic');
+  els.forEach(el => {
+    const strength = parseFloat(el.dataset.magnetic || 18);
+    let rect;
+    el.addEventListener('mouseenter', () => { rect = el.getBoundingClientRect(); });
+    el.addEventListener('mousemove', e => {
+      if(!rect) rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width/2;
+      const cy = rect.top + rect.height/2;
+      const dx = (e.clientX - cx) / (rect.width/2);
+      const dy = (e.clientY - cy) / (rect.height/2);
+      el.style.transform = `translate(${dx * strength}px, ${dy * strength}px)`;
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.transition = 'transform .6s cubic-bezier(.22,1,.36,1)';
+      el.style.transform = '';
+      setTimeout(() => el.style.transition = '', 600);
+    });
+  });
+})();
+
+/* =========================================================
+   M. CAFÉ BG + ORIGIN PARALLAX
+   ========================================================= */
+(function initParallax(){
+  gsap.to('#cafeBgImg', {
+    yPercent:-10, ease:'none',
+    scrollTrigger:{ trigger:'#cafe', start:'top bottom', end:'bottom top', scrub:true }
+  });
+  gsap.to('#originLeft', {
+    yPercent:-15, ease:'none',
+    scrollTrigger:{ trigger:'#origin', start:'top bottom', end:'bottom top', scrub:true }
+  });
+  gsap.to('#originRight', {
+    yPercent:-8, ease:'none',
+    scrollTrigger:{ trigger:'#origin', start:'top bottom', end:'bottom top', scrub:true }
+  });
+})();
+
+/* =========================================================
+   N. CONTACT LOGO REVEAL
+   ========================================================= */
+ScrollTrigger.create({
+  trigger:'#contactLogo', start:'top 85%',
+  onEnter:() => document.getElementById('contactLogo').classList.add('is-visible')
+});
+
+/* =========================================================
+   O. REFRESH SCROLLTRIGGER AFTER PRELOADER
+   ========================================================= */
+window.addEventListener('load', () => {
+  setTimeout(() => ScrollTrigger.refresh(), 1600);
+});
+</script>
+</body>
+</html>
