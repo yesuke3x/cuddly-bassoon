@@ -115,6 +115,15 @@ img.is-loaded{opacity:1}
 }
 @keyframes plShine{0%{background-position:0 0}100%{background-position:200% 0}}
 @keyframes fadeUp{to{opacity:.7;transform:translateY(0)}from{transform:translateY(6px)}}
+#preloader .pl-bar{
+  width:180px;height:1px;margin:22px auto 0;
+  background:rgba(160,68,90,.12);overflow:hidden;border-radius:1px;
+}
+#preloader .pl-bar-fill{
+  width:0;height:100%;
+  background:linear-gradient(90deg, var(--rose), var(--gold));
+  transition:width .35s ease;
+}
 
 /* =========================================================
    3. CUSTOM CURSOR
@@ -135,12 +144,80 @@ img.is-loaded{opacity:1}
              opacity .3s ease;
 }
 .cursor-ring.is-active{width:60px;height:60px;background:rgba(201,169,110,.08)}
+.cursor-ring.is-link{width:72px;height:72px;border-color:var(--gold);background:rgba(201,169,110,.14);backdrop-filter:blur(2px)}
+.cursor-ring.is-card{border-color:var(--rose);background:rgba(160,68,90,.04)}
+.cursor-ring.is-card.on-dark{border-color:var(--gold-soft);background:rgba(224,198,143,.05)}
+.cursor-ring.is-snap{mix-blend-mode:normal;border-radius:50%}
+.cursor-dot.on-card{background:var(--rose);width:10px;height:10px;box-shadow:0 0 14px rgba(160,68,90,.55)}
+.cursor-dot.on-dark{background:var(--gold-soft);box-shadow:0 0 14px rgba(224,198,143,.55)}
+.cursor-label{
+  position:fixed;top:0;left:0;pointer-events:none;z-index:1499;
+  font-family:var(--ff-body);font-size:.6rem;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--gold);background:rgba(26,15,18,.85);padding:.35rem .75rem;border-radius:999px;
+  transform:translate(-50%,-150%) scale(.85);opacity:0;
+  transition:opacity .3s var(--ease-luxe), transform .3s var(--ease-luxe);
+  white-space:nowrap;
+}
+.cursor-label.is-visible{opacity:1;transform:translate(-50%,-180%) scale(1)}
 @media (hover:none), (pointer:coarse){
-  .cursor-dot,.cursor-ring{display:none}
+  .cursor-dot,.cursor-ring,.cursor-label{display:none}
   body{cursor:auto}
 }
 body{cursor:none}
-a,button,.magnetic,.spot-card{cursor:none}
+a,button,.magnetic,.spot-card,
+.ticker-item,.testimonial,.cfeat,
+.cafe-sign,.cafe-address,.origin-pill,
+.contact-logo,.contact-social a{cursor:none}
+
+/* =========================================================
+   3b. SOFT SECTION BRIDGES — smooth color-gradient fades that
+   melt adjacent sections into each other without the banding
+   that stacked backdrop-filter layers produce. Pure gradient,
+   no blur strips.
+   ========================================================= */
+.section-bridge{
+  position:absolute;left:0;right:0;pointer-events:none;z-index:1;
+  height:clamp(120px, 22vw, 220px);
+}
+@media (max-width:760px){.section-bridge{height:110px}}
+.section-bridge.sb-top{top:0}
+.section-bridge.sb-bot{bottom:0}
+/* Cream bridge — used at the top/bottom of dark sections that
+   sit next to cream panels. Paints a smooth cream→transparent
+   wash so the section's real bg only fully shows deeper in. */
+.section-bridge.sb-top.to-cream{
+  background:linear-gradient(to bottom,
+    var(--bg) 0%,
+    rgba(253,248,245,.92) 14%,
+    rgba(253,248,245,.74) 30%,
+    rgba(253,248,245,.50) 50%,
+    rgba(253,248,245,.26) 72%,
+    rgba(253,248,245,.08) 88%,
+    transparent 100%);
+}
+.section-bridge.sb-bot.to-cream{
+  background:linear-gradient(to top,
+    var(--bg) 0%,
+    rgba(253,248,245,.92) 14%,
+    rgba(253,248,245,.74) 30%,
+    rgba(253,248,245,.50) 50%,
+    rgba(253,248,245,.26) 72%,
+    rgba(253,248,245,.08) 88%,
+    transparent 100%);
+}
+/* Dark bridge — used on the top of a light section sitting
+   below a dark one, to pre-tint the last cream strip. */
+.section-bridge.sb-top.to-dark{
+  background:linear-gradient(to top,
+    transparent 0%,
+    rgba(26,15,18,.18) 40%,
+    rgba(26,15,18,.50) 75%,
+    rgba(26,15,18,.85) 100%);
+}
+
+/* Keep `.gradual-blur` wrappers as a no-op so existing markup
+   doesn't break, but render nothing (layers removed). */
+.gradual-blur{display:none}
 
 /* =========================================================
    4. NAVIGATION
@@ -166,6 +243,7 @@ a,button,.magnetic,.spot-card{cursor:none}
   font-weight:500;
 }
 .nav.is-scrolled .brand{color:var(--rose)}
+.nav-center{display:flex;align-items:center;gap:2.25rem}
 .nav-links{display:flex;gap:2.25rem;list-style:none}
 .nav-links a{
   font-size:.78rem;letter-spacing:.22em;
@@ -182,12 +260,111 @@ a,button,.magnetic,.spot-card{cursor:none}
 }
 .nav-links a:hover{opacity:1}
 .nav-links a:hover::after{width:100%}
-@media (max-width:760px){.nav-links{display:none}}
+
+/* Nav WhatsApp CTA — desktop pill button */
+.nav-wa{
+  display:inline-flex;align-items:center;gap:.55rem;
+  padding:.55rem 1.15rem;
+  border:1px solid var(--gold);
+  color:var(--gold);
+  font-family:var(--ff-body);font-size:.68rem;
+  letter-spacing:.28em;text-transform:uppercase;font-weight:500;
+  border-radius:999px;
+  transition:background .5s var(--ease-luxe), color .5s var(--ease-luxe), transform .4s var(--ease-luxe);
+  white-space:nowrap;
+}
+.nav-wa:hover{background:var(--gold);color:#1a0f12;transform:translateY(-1px)}
+.nav-wa svg{flex:0 0 auto}
+.nav.is-scrolled .nav-wa{border-color:var(--rose);color:var(--rose)}
+.nav.is-scrolled .nav-wa:hover{background:var(--rose);color:var(--cream)}
+
+/* Hamburger */
+.nav-burger{
+  display:none;
+  width:42px;height:42px;padding:0;
+  border:1px solid var(--gold);border-radius:50%;
+  color:var(--gold);background:transparent;
+  position:relative;z-index:1201;
+  transition:background .4s var(--ease-luxe), color .4s var(--ease-luxe), border-color .4s var(--ease-luxe);
+}
+.nav-burger span{
+  display:block;width:18px;height:1px;margin:0 auto;
+  background:currentColor;position:relative;
+  transition:transform .4s var(--ease-luxe), opacity .3s;
+}
+.nav-burger span + span{margin-top:5px}
+.nav.is-scrolled .nav-burger{border-color:var(--rose);color:var(--rose)}
+.nav-burger.is-open{background:var(--gold);color:#1a0f12;border-color:var(--gold)}
+.nav-burger.is-open span:nth-child(1){transform:translateY(3px) rotate(45deg)}
+.nav-burger.is-open span:nth-child(2){opacity:0}
+.nav-burger.is-open span:nth-child(3){transform:translateY(-3px) rotate(-45deg)}
+
+/* Mobile menu overlay */
+.mobile-menu{
+  position:fixed;inset:0;z-index:1150;
+  background:linear-gradient(160deg, #1a0f12 0%, #2a1118 50%, #3b1820 100%);
+  transform:translateY(-100%);
+  transition:transform .7s var(--ease-luxe);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:5rem 1.5rem 2rem;
+}
+.mobile-menu.is-open{transform:translateY(0)}
+.mobile-menu::before{
+  /* Aurora wash */
+  content:"";position:absolute;inset:-20%;
+  background:
+    radial-gradient(50vmax 50vmax at 10% 10%, rgba(242,196,206,.22), transparent 60%),
+    radial-gradient(50vmax 50vmax at 90% 90%, rgba(201,169,110,.18), transparent 60%);
+  filter:blur(60px);pointer-events:none;
+}
+.mobile-menu ul{
+  position:relative;list-style:none;
+  display:flex;flex-direction:column;gap:1.8rem;text-align:center;
+}
+.mobile-menu a{
+  font-family:var(--ff-display);
+  font-size:2.4rem;font-weight:400;letter-spacing:.01em;
+  color:var(--cream);
+  display:inline-block;padding:.3rem .6rem;
+  position:relative;
+  opacity:0;transform:translateY(16px);
+  transition:color .4s, opacity .7s var(--ease-luxe), transform .7s var(--ease-luxe);
+}
+.mobile-menu.is-open a{opacity:1;transform:translateY(0)}
+.mobile-menu li:nth-child(1) a{transition-delay:.12s}
+.mobile-menu li:nth-child(2) a{transition-delay:.18s}
+.mobile-menu li:nth-child(3) a{transition-delay:.24s}
+.mobile-menu li:nth-child(4) a{transition-delay:.30s}
+.mobile-menu a:hover{color:var(--gold)}
+
+.mobile-menu .m-wa{
+  margin-top:2.5rem;position:relative;
+  display:inline-flex;align-items:center;gap:.75rem;
+  padding:1rem 1.8rem;background:var(--gold);color:#1a0f12;
+  font-family:var(--ff-body);font-size:.78rem;
+  letter-spacing:.22em;text-transform:uppercase;font-weight:500;
+  border-radius:999px;
+  box-shadow:0 20px 50px -15px rgba(201,169,110,.55);
+  opacity:0;transform:translateY(16px);
+  transition:opacity .7s var(--ease-luxe) .36s, transform .7s var(--ease-luxe) .36s;
+}
+.mobile-menu.is-open .m-wa{opacity:1;transform:translateY(0)}
+.mobile-menu .m-foot{
+  position:relative;margin-top:3rem;
+  font-family:var(--ff-body);font-size:.68rem;
+  letter-spacing:.32em;text-transform:uppercase;color:rgba(250,243,238,.55);
+}
+
+@media (max-width:900px){
+  .nav-links{display:none}
+  .nav-wa{display:none}
+  .nav-burger{display:inline-flex;align-items:center;justify-content:center;flex-direction:column}
+}
 
 /* =========================================================
    5. HERO — SCROLL-DRIVEN VIDEO
    ========================================================= */
-.hero{position:relative;height:300vh;background:#0a0507}
+.hero{position:relative;height:220vh;background:#0a0507}
 .hero-sticky{
   position:sticky;top:0;
   height:100vh;width:100%;overflow:hidden;
@@ -195,8 +372,9 @@ a,button,.magnetic,.spot-card{cursor:none}
 .hero-video{
   position:absolute;inset:0;
   width:100%;height:100%;
-  object-fit:cover;
+  display:block;
   opacity:0;transition:opacity 1.2s ease;
+  background:#0a0507;
 }
 .hero-video.is-ready{opacity:1}
 .hero-overlay{
@@ -309,7 +487,8 @@ a,button,.magnetic,.spot-card{cursor:none}
 .story{position:relative;overflow:hidden}
 .aurora{
   position:absolute;inset:-20%;z-index:0;pointer-events:none;
-  filter:blur(80px);opacity:.6;
+  filter:blur(60px);opacity:.55;
+  will-change:transform;
 }
 .aurora::before,.aurora::after{
   content:"";position:absolute;border-radius:50%;
@@ -405,8 +584,8 @@ a,button,.magnetic,.spot-card{cursor:none}
 .spot-card{
   position:relative;
   background:var(--cream);
-  border-radius:6px;
-  padding:0;
+  border-radius:10px;
+  padding:14px 14px 0;
   overflow:hidden;
   transform-style:preserve-3d;
   transition:transform .6s var(--ease-luxe), box-shadow .6s var(--ease-luxe);
@@ -422,22 +601,25 @@ a,button,.magnetic,.spot-card{cursor:none}
     rgba(201,169,110,.22), transparent 45%);
   opacity:0;transition:opacity .5s;
   pointer-events:none;z-index:3;
+  border-radius:inherit;
 }
 .spot-card:hover::before{opacity:1}
 .spot-card::after{
-  content:"";position:absolute;inset:14px;
-  border:1px solid rgba(201,169,110,.2);
-  border-radius:4px;pointer-events:none;z-index:2;
+  content:"";position:absolute;inset:6px;
+  border:1px solid rgba(201,169,110,.25);
+  border-radius:8px;pointer-events:none;z-index:2;
 }
 .spot-card .card-img{
   position:relative;aspect-ratio:4/5;overflow:hidden;
+  border-radius:4px;
+  box-shadow:inset 0 0 0 1px rgba(201,169,110,.18);
 }
 .spot-card .card-img img{
-  width:100%;height:100%;object-fit:cover;
+  width:100%;height:100%;object-fit:cover;object-position:center;
   transition:transform 1.2s var(--ease-luxe);
 }
 .spot-card:hover .card-img img{transform:scale(1.06)}
-.spot-card .card-body{padding:1.8rem 1.6rem 2rem;text-align:center;position:relative;z-index:2}
+.spot-card .card-body{padding:1.6rem .6rem 1.8rem;text-align:center;position:relative;z-index:2}
 .spot-card .tag{
   font-size:.68rem;letter-spacing:.32em;text-transform:uppercase;
   color:var(--gold);font-weight:500;
@@ -462,25 +644,75 @@ a,button,.magnetic,.spot-card{cursor:none}
 .spot-card .order-btn:hover .arrow{transform:translateX(4px)}
 
 /* =========================================================
-   9. INFINITE TICKER
+   9. INFINITE TICKER — interactive gallery
    ========================================================= */
+.ticker-wrap{margin-top:5rem;position:relative}
 .ticker{
-  margin-top:5rem;
   background:var(--rose);
   border-top:1px solid var(--gold);
   border-bottom:1px solid var(--gold);
-  overflow:hidden;padding:1.4rem 0;position:relative;
+  overflow:hidden;padding:1.6rem 0;position:relative;
 }
+.ticker::before,.ticker::after{
+  /* gradual edge blur for luxury look */
+  content:"";position:absolute;top:0;bottom:0;width:130px;z-index:4;pointer-events:none;
+}
+.ticker::before{left:0;background:linear-gradient(to right, var(--rose) 0%, transparent 100%)}
+.ticker::after{right:0;background:linear-gradient(to left, var(--rose) 0%, transparent 100%)}
+
 .ticker-track{
   display:flex;gap:1.5rem;width:max-content;
-  animation:tickerScroll 35s linear infinite;
+  /* GSAP drives the scroll — no CSS animation so slowdown stays continuous */
+  will-change:transform;
 }
+
 .ticker-item{
-  width:260px;height:180px;flex:0 0 auto;overflow:hidden;border-radius:2px;
-  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  width:260px;height:180px;flex:0 0 auto;overflow:hidden;
+  border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
+  position:relative;
+  cursor:none;
+  transition:transform .5s var(--ease-luxe), box-shadow .5s var(--ease-luxe);
+  outline:1px solid rgba(201,169,110,.18);
+  outline-offset:-1px;
 }
-.ticker-item img{width:100%;height:100%;object-fit:cover}
+.ticker-item:hover{
+  transform:translateY(-6px);
+  box-shadow:0 20px 50px rgba(0,0,0,.4), 0 0 0 1px var(--gold);
+}
+.ticker-item img{width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease-luxe)}
+.ticker-item:hover img{transform:scale(1.06)}
+.ticker-item::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to top, rgba(0,0,0,.35) 0%, transparent 45%);
+  opacity:0;transition:opacity .4s;pointer-events:none;border-radius:inherit;
+}
+.ticker-item:hover::after{opacity:1}
 @keyframes tickerScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* Caption rail */
+.ticker-caption{
+  position:relative;min-height:70px;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:1.6rem 1.5rem 0;
+  pointer-events:none;
+}
+.ticker-caption .cap{
+  position:absolute;inset:1.6rem 1.5rem 0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  opacity:0;transform:translateY(12px);
+  transition:opacity .5s var(--ease-luxe), transform .5s var(--ease-luxe);
+}
+.ticker-caption .cap.is-active{opacity:1;transform:translateY(0)}
+.ticker-caption .cap-eyebrow{
+  font-family:var(--ff-body);font-size:.66rem;letter-spacing:.42em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:.35rem;
+}
+.ticker-caption .cap-text{
+  font-family:var(--ff-display);font-style:italic;
+  font-size:clamp(1.1rem, 1.5vw, 1.35rem);color:var(--ink);
+  font-weight:400;max-width:44ch;line-height:1.4;
+}
 
 /* =========================================================
    10. TESTIMONIALS — with Silk background
@@ -562,7 +794,7 @@ a,button,.magnetic,.spot-card{cursor:none}
   background:linear-gradient(to bottom, rgba(10,5,7,.55), rgba(10,5,7,.78));
 }
 .cafe-content{
-  position:relative;z-index:2;text-align:center;color:var(--cream);
+  position:relative;z-index:3;text-align:center;color:var(--cream);
   max-width:880px;padding:0 1.5rem;
 }
 .badge-coming{
@@ -635,7 +867,7 @@ a,button,.magnetic,.spot-card{cursor:none}
 }
 @media (max-width:760px){.origin-bg{grid-template-columns:1fr;grid-template-rows:1fr 1fr}}
 .origin-content{
-  position:relative;z-index:2;text-align:center;color:var(--cream);padding:0 1.5rem;
+  position:relative;z-index:3;text-align:center;color:var(--cream);padding:0 1.5rem;
   display:flex;flex-direction:column;align-items:center;gap:1rem;
 }
 .origin-content .eyebrow{color:var(--gold);margin-bottom:1.5rem;display:block}
@@ -671,9 +903,18 @@ a,button,.magnetic,.spot-card{cursor:none}
   background:linear-gradient(135deg, #1a0f12 0%, #2a1118 60%, #3b1820 100%);
   color:var(--cream);
 }
+@media (max-width:760px){
+  .section.contact{padding:4rem 0 2.5rem}
+  .contact-features{margin-top:2rem}
+  .contact-logo{width:110px;height:110px}
+  .contact-meta{gap:1.2rem 2rem;margin-top:1.8rem}
+  .contact .ornament{margin:2rem 0 1.2rem}
+  .contact .ornament:last-of-type{margin-top:1.6rem;margin-bottom:0}
+}
 .aurora-dark{
   position:absolute;inset:-20%;z-index:0;pointer-events:none;
-  filter:blur(100px);opacity:.55;
+  filter:blur(70px);opacity:.55;
+  will-change:transform;
 }
 .aurora-dark::before,.aurora-dark::after{content:"";position:absolute;border-radius:50%}
 .aurora-dark::before{
@@ -687,7 +928,7 @@ a,button,.magnetic,.spot-card{cursor:none}
   animation:auroraB 24s ease-in-out infinite alternate;opacity:.4;
 }
 
-.contact-inner{position:relative;z-index:1;text-align:center;max-width:720px;margin:0 auto}
+.contact-inner{position:relative;z-index:3;text-align:center;max-width:720px;margin:0 auto}
 .contact h2{
   font-family:var(--ff-display);font-weight:400;
   font-size:clamp(2.6rem,5.5vw,4.6rem);line-height:1;margin-bottom:.8rem;
@@ -734,6 +975,62 @@ a,button,.magnetic,.spot-card{cursor:none}
 .contact-logo.is-visible{opacity:1;transform:translateY(0)}
 .contact-logo img{width:100%;height:100%;object-fit:cover}
 
+/* Contact feature grid */
+.contact-features{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;
+  margin:2.8rem auto 0;max-width:820px;position:relative;z-index:1;
+}
+@media (max-width:760px){.contact-features{grid-template-columns:1fr;gap:1rem}}
+.cfeat{
+  padding:1.5rem 1.2rem 1.3rem;border:1px solid rgba(201,169,110,.25);
+  border-radius:12px;background:rgba(250,243,238,.04);backdrop-filter:blur(6px);
+  text-align:center;transition:transform .5s var(--ease-luxe), background .5s var(--ease-luxe), border-color .5s var(--ease-luxe);
+}
+.cfeat:hover{transform:translateY(-4px);background:rgba(250,243,238,.07);border-color:rgba(201,169,110,.5)}
+.cfeat svg{color:var(--gold);margin-bottom:.7rem}
+.cfeat-title{
+  font-family:var(--ff-display);font-size:1.15rem;color:var(--cream);margin-bottom:.3rem;
+}
+.cfeat-txt{
+  font-family:var(--ff-body);font-size:.8rem;line-height:1.55;
+  color:rgba(250,243,238,.68);letter-spacing:.01em;
+}
+
+.contact-quote{
+  margin:2.2rem auto 0;max-width:560px;position:relative;z-index:1;
+  font-family:var(--ff-display);font-style:italic;
+  font-size:clamp(1.1rem,1.8vw,1.4rem);line-height:1.5;
+  color:rgba(250,243,238,.85);
+}
+.contact-quote::before,.contact-quote::after{
+  content:"";display:block;width:40px;height:1px;background:var(--gold);
+  margin:1rem auto;opacity:.45;
+}
+
+.contact-meta{
+  display:flex;flex-wrap:wrap;gap:2rem 3rem;justify-content:center;
+  margin-top:2.4rem;position:relative;z-index:1;
+}
+.cmeta-item{
+  font-family:var(--ff-body);font-size:.72rem;letter-spacing:.28em;
+  text-transform:uppercase;color:rgba(250,243,238,.6);
+}
+.cmeta-item strong{
+  display:block;font-family:var(--ff-display);font-style:normal;font-weight:400;
+  font-size:1.1rem;letter-spacing:.04em;text-transform:none;color:var(--gold);
+  margin-top:.35rem;
+}
+
+.contact-social{
+  display:inline-flex;gap:.9rem;margin-top:2rem;position:relative;z-index:1;
+}
+.contact-social a{
+  width:42px;height:42px;border-radius:50%;border:1px solid rgba(201,169,110,.35);
+  display:inline-flex;align-items:center;justify-content:center;color:var(--gold);
+  transition:background .4s var(--ease-luxe), transform .4s var(--ease-luxe), border-color .4s var(--ease-luxe);
+}
+.contact-social a:hover{background:var(--gold);color:#1a0f12;transform:translateY(-3px);border-color:var(--gold)}
+
 /* =========================================================
    14. FOOTER
    ========================================================= */
@@ -776,28 +1073,56 @@ a,button,.magnetic,.spot-card{cursor:none}
 
 <!-- ============ PRELOADER ============ -->
 <div id="preloader" aria-hidden="true">
-  <div>
+  <div style="text-align:center">
     <div class="pl-mark">Maison Rosé</div>
     <div class="pl-sub">Handcrafted · Jakarta</div>
+    <div class="pl-bar"><div class="pl-bar-fill" id="plBarFill"></div></div>
   </div>
 </div>
 
-<!-- ============ CUSTOM CURSOR ============ -->
+<!-- ============ CUSTOM CURSOR (Ghost) ============ -->
 <div class="cursor-ring" aria-hidden="true"></div>
 <div class="cursor-dot" aria-hidden="true"></div>
+<div class="cursor-label" id="cursorLabel" aria-hidden="true"></div>
 
 <!-- ============ NAVIGATION ============ -->
 <nav class="nav" id="nav">
   <div class="container nav-inner">
     <a href="#top" class="brand">Maison Rosé</a>
     <ul class="nav-links">
-      <li><a href="#story">Story</a></li>
       <li><a href="#products">Preserve</a></li>
+      <li><a href="#story">Story</a></li>
       <li><a href="#cafe">Café</a></li>
       <li><a href="#contact">Order</a></li>
     </ul>
+    <a href="https://wa.me/6222813374568" class="nav-wa magnetic" data-magnetic="10" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+        <path d="M16 3C9 3 3.4 8.6 3.4 15.6c0 2.5.7 4.9 2 7L3 29l6.6-2.3c2 .9 4.2 1.3 6.4 1.3 7 0 12.6-5.6 12.6-12.6S23 3 16 3zm7.4 17.9c-.3.8-1.7 1.5-2.4 1.6-.6 0-1.4.1-2.3-.1-.5-.2-1.2-.4-2.1-.8-3.7-1.6-6.1-5.3-6.3-5.6-.2-.3-1.5-2-1.5-3.8 0-1.8.9-2.7 1.3-3.1.3-.3.8-.4 1-.4h.7c.2 0 .6-.1.9.7.3.8 1.1 2.7 1.2 2.9.1.2.1.4 0 .6-.1.2-.2.4-.4.6-.2.2-.4.4-.5.6-.2.2-.4.4-.2.8.2.4 1 1.7 2.2 2.7 1.5 1.3 2.8 1.7 3.2 1.9.4.2.6.2.8-.1.2-.2.9-1.1 1.1-1.4.2-.4.5-.3.8-.2.3.1 2.1 1 2.5 1.2.4.2.6.3.7.4.1.2.1.9-.2 1.6z"/>
+      </svg>
+      <span>Let's discuss details</span>
+    </a>
+    <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+
+<!-- ============ MOBILE MENU ============ -->
+<div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+  <ul>
+    <li><a href="#products">Preserve</a></li>
+    <li><a href="#story">Story</a></li>
+    <li><a href="#cafe">Café</a></li>
+    <li><a href="#contact">Order</a></li>
+  </ul>
+  <a href="https://wa.me/6222813374568" class="m-wa" target="_blank" rel="noopener">
+    <svg width="18" height="18" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+      <path d="M16 3C9 3 3.4 8.6 3.4 15.6c0 2.5.7 4.9 2 7L3 29l6.6-2.3c2 .9 4.2 1.3 6.4 1.3 7 0 12.6-5.6 12.6-12.6S23 3 16 3zm7.4 17.9c-.3.8-1.7 1.5-2.4 1.6-.6 0-1.4.1-2.3-.1-.5-.2-1.2-.4-2.1-.8-3.7-1.6-6.1-5.3-6.3-5.6-.2-.3-1.5-2-1.5-3.8 0-1.8.9-2.7 1.3-3.1.3-.3.8-.4 1-.4h.7c.2 0 .6-.1.9.7.3.8 1.1 2.7 1.2 2.9.1.2.1.4 0 .6-.1.2-.2.4-.4.6-.2.2-.4.4-.5.6-.2.2-.4.4-.2.8.2.4 1 1.7 2.2 2.7 1.5 1.3 2.8 1.7 3.2 1.9.4.2.6.2.8-.1.2-.2.9-1.1 1.1-1.4.2-.4.5-.3.8-.2.3.1 2.1 1 2.5 1.2.4.2.6.3.7.4.1.2.1.9-.2 1.6z"/>
+    </svg>
+    <span>Let's discuss details</span>
+  </a>
+  <div class="m-foot">Jakarta · Handcrafted</div>
+</div>
 
 <main id="top">
 
@@ -806,10 +1131,7 @@ a,button,.magnetic,.spot-card{cursor:none}
      ========================================================= -->
 <section class="hero" id="hero">
   <div class="hero-sticky">
-    <video class="hero-video" id="heroVideo"
-           muted playsinline preload="auto" webkit-playsinline disablePictureInPicture>
-      <source src="./video/pour-jam.mp4" type="video/mp4" />
-    </video>
+    <canvas class="hero-video" id="heroCanvas" aria-hidden="true"></canvas>
     <div class="hero-overlay"></div>
 
     <div class="hero-content">
@@ -823,7 +1145,7 @@ a,button,.magnetic,.spot-card{cursor:none}
           <span class="scroll-float-word">&nbsp;Jakarta</span>
         </p>
         <div class="divider-gold"></div>
-        <a href="#story" class="hero-cta magnetic" data-magnetic="22">
+        <a href="#products" class="hero-cta magnetic" data-magnetic="22" data-cursor="Explore">
           <span>Discover Our Story</span>
           <span class="arrow">→</span>
         </a>
@@ -835,39 +1157,7 @@ a,button,.magnetic,.spot-card{cursor:none}
 </section>
 
 <!-- =========================================================
-     SECTION 2 — STORY
-     ========================================================= -->
-<section class="section story" id="story">
-  <div class="aurora" aria-hidden="true"></div>
-  <div class="container story-grid">
-    <div class="story-img reveal">
-      <img data-src="./images/photo_8.jpg" alt="Eva Victoria cooking strawberry preserves in copper pan" />
-    </div>
-    <div class="story-text">
-      <span class="eyebrow reveal">Our Founder</span>
-      <h2 class="h-display split-reveal" data-split>Made with love. Made by hand.</h2>
-      <p class="reveal">
-        Maison Rosé was born from Eva Victoria's obsession with one perfect thing —
-        strawberries at peak ripeness, transformed slowly over an open flame into something
-        that tastes like a memory. No shortcuts. No preservatives. Just fruit, sugar, and time.
-      </p>
-      <div class="signature reveal">Eva Victoria</div>
-      <div class="bee-decor reveal" aria-hidden="true">
-        <!-- Bee SVG -->
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
-          <ellipse cx="12" cy="13" rx="4.5" ry="6" />
-          <path d="M12 8v10M8 9l-3-3M16 9l3-3M9 11h6M9 14h6" />
-          <ellipse cx="7" cy="8" rx="3" ry="1.8" transform="rotate(-30 7 8)" />
-          <ellipse cx="17" cy="8" rx="3" ry="1.8" transform="rotate(30 17 8)" />
-        </svg>
-        <span>Handmade · Jakarta</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- =========================================================
-     SECTION 3 — THE PRESERVE
+     SECTION 2 — THE PRESERVE (moved before Story)
      ========================================================= -->
 <section class="section products" id="products">
   <div class="container">
@@ -925,22 +1215,78 @@ a,button,.magnetic,.spot-card{cursor:none}
     </div>
   </div>
 
-  <!-- Infinite ticker -->
-  <div class="ticker" aria-hidden="true">
-    <div class="ticker-track">
-      <div class="ticker-item"><img data-src="./images/photo_4.jpg" alt="" /></div>
-      <div class="ticker-item"><img data-src="./images/photo_3.jpg" alt="" /></div>
-      <div class="ticker-item"><img data-src="./images/photo_7.jpg" alt="" /></div>
-      <div class="ticker-item"><img data-src="./images/photo_9.jpg" alt="" /></div>
-      <div class="ticker-item"><img data-src="./images/photo_8.jpg" alt="" /></div>
-      <div class="ticker-item"><img data-src="./images/photo_12.jpg" alt="" /></div>
-      <!-- duplicate for seamless loop -->
-      <div class="ticker-item"><img data-src="./images/photo_4.jpg" alt="" /></div>
-      <div class="ticker-item"><img data-src="./images/photo_3.jpg" alt="" /></div>
-      <div class="ticker-item"><img data-src="./images/photo_7.jpg" alt="" /></div>
-      <div class="ticker-item"><img data-src="./images/photo_9.jpg" alt="" /></div>
-      <div class="ticker-item"><img data-src="./images/photo_8.jpg" alt="" /></div>
-      <div class="ticker-item"><img data-src="./images/photo_12.jpg" alt="" /></div>
+  <!-- Interactive gallery ticker with rotating captions -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <div class="ticker-track" id="tickerTrack">
+        <div class="ticker-item" data-cap="0"><img data-src="./images/photo_4.jpg" alt="Signature strawberry preserve" /></div>
+        <div class="ticker-item" data-cap="1"><img data-src="./images/photo_3.jpg" alt="Small-batch jars lined" /></div>
+        <div class="ticker-item" data-cap="2"><img data-src="./images/photo_7.jpg" alt="Gift set presentation" /></div>
+        <div class="ticker-item" data-cap="0"><img data-src="./images/photo_9.jpg" alt="Café signage at dusk" /></div>
+        <div class="ticker-item" data-cap="1"><img data-src="./images/photo_8.jpg" alt="Jam simmering in copper pan" /></div>
+        <div class="ticker-item" data-cap="2"><img data-src="./images/photo_12.jpg" alt="Jars packaged by hand" /></div>
+        <!-- duplicate for seamless loop -->
+        <div class="ticker-item" data-cap="0"><img data-src="./images/photo_4.jpg" alt="" /></div>
+        <div class="ticker-item" data-cap="1"><img data-src="./images/photo_3.jpg" alt="" /></div>
+        <div class="ticker-item" data-cap="2"><img data-src="./images/photo_7.jpg" alt="" /></div>
+        <div class="ticker-item" data-cap="0"><img data-src="./images/photo_9.jpg" alt="" /></div>
+        <div class="ticker-item" data-cap="1"><img data-src="./images/photo_8.jpg" alt="" /></div>
+        <div class="ticker-item" data-cap="2"><img data-src="./images/photo_12.jpg" alt="" /></div>
+      </div>
+    </div>
+    <div class="ticker-caption" id="tickerCaption">
+      <div class="cap is-active" data-idx="0">
+        <div class="cap-eyebrow">The Jar</div>
+        <div class="cap-text">Hand-tied with lace and ribbon — every jar is sealed with intention.</div>
+      </div>
+      <div class="cap" data-idx="1">
+        <div class="cap-eyebrow">The Process</div>
+        <div class="cap-text">Strawberries at peak ripeness, slow-cooked over an open flame in small copper batches.</div>
+      </div>
+      <div class="cap" data-idx="2">
+        <div class="cap-eyebrow">The Gift</div>
+        <div class="cap-text">A jar of Maison Rosé turns an ordinary morning into a small ceremony.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SECTION 3 — STORY (moved after Products)
+     ========================================================= -->
+<section class="section story" id="story">
+  <div class="aurora" aria-hidden="true"></div>
+  <div class="gradual-blur gb-top" aria-hidden="true">
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+  </div>
+  <div class="container story-grid">
+    <div class="story-img reveal">
+      <img data-src="./images/photo_8.jpg" alt="Eva Victoria cooking strawberry preserves in copper pan" />
+    </div>
+    <div class="story-text">
+      <span class="eyebrow reveal">Our Founder</span>
+      <h2 class="h-display split-reveal" data-split>Made with love.<br/>Made by hand.</h2>
+      <p class="reveal">
+        Maison Rosé was born from Eva Victoria's obsession with one perfect thing —
+        strawberries at peak ripeness, transformed slowly over an open flame into
+        something that tastes like a memory. No shortcuts. No preservatives.
+        Just fruit, sugar, and time.
+      </p>
+      <p class="reveal" style="margin-top:1rem;color:var(--ink-soft)">
+        Every jar is tied by hand, sealed with intention, and delivered across
+        Jakarta to homes that appreciate the difference between ordinary and extraordinary.
+      </p>
+      <div class="signature reveal">Eva Victoria</div>
+      <div class="bee-decor reveal" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+          <ellipse cx="12" cy="13" rx="4.5" ry="6"/>
+          <path d="M12 8v10M9 11h6M9 14h6"/>
+          <ellipse cx="7" cy="8" rx="3" ry="1.8" transform="rotate(-30 7 8)"/>
+          <ellipse cx="17" cy="8" rx="3" ry="1.8" transform="rotate(30 17 8)"/>
+        </svg>
+        <span>Handmade · Jakarta</span>
+      </div>
     </div>
   </div>
 </section>
@@ -949,6 +1295,10 @@ a,button,.magnetic,.spot-card{cursor:none}
      SECTION 4 — TESTIMONIALS
      ========================================================= -->
 <section class="section testimonials" id="testimonials">
+  <div class="gradual-blur gb-top" aria-hidden="true">
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+  </div>
   <!-- Silk fluid background -->
   <div class="silk" aria-hidden="true">
     <svg viewBox="0 0 1440 720" preserveAspectRatio="none">
@@ -1002,6 +1352,18 @@ a,button,.magnetic,.spot-card{cursor:none}
   <div class="cafe-bg">
     <img data-src="./images/photo_6.jpg" alt="Maison Rosé café storefront" id="cafeBgImg" />
   </div>
+  <!-- Soft fade from cream (testimonials above) into dark café image -->
+  <div class="section-bridge sb-top to-cream" aria-hidden="true"></div>
+  <div class="gradual-blur gb-top" aria-hidden="true">
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+  </div>
+  <!-- Soft fade at the bottom into the next section -->
+  <div class="section-bridge sb-bot to-cream" aria-hidden="true"></div>
+  <div class="gradual-blur gb-bot" aria-hidden="true">
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+  </div>
   <div class="cafe-content">
     <span class="badge-coming reveal"><span class="dot"></span>Coming Soon</span>
     <div class="cafe-sign reveal"><img data-src="./images/photo_9.jpg" alt="Maison Rosé illuminated signage" /></div>
@@ -1031,6 +1393,17 @@ a,button,.magnetic,.spot-card{cursor:none}
     <div class="half"><img data-src="./images/photo_11.jpg" alt="" id="originLeft" /></div>
     <div class="half"><img data-src="./images/photo_12.jpg" alt="" id="originRight" /></div>
   </div>
+  <!-- Bridges both sides: cream fades out into the origin photos, then back to cream for contact -->
+  <div class="section-bridge sb-top to-cream" aria-hidden="true"></div>
+  <div class="gradual-blur gb-top" aria-hidden="true">
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+  </div>
+  <div class="section-bridge sb-bot to-cream" aria-hidden="true"></div>
+  <div class="gradual-blur gb-bot" aria-hidden="true">
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+  </div>
   <div class="origin-content">
     <span class="eyebrow reveal">The Process</span>
     <h2 class="shiny-heading reveal" data-text="The Process">The Process</h2>
@@ -1045,20 +1418,56 @@ a,button,.magnetic,.spot-card{cursor:none}
      ========================================================= -->
 <section class="section contact" id="contact">
   <div class="aurora-dark" aria-hidden="true"></div>
+  <div class="section-bridge sb-top to-cream" aria-hidden="true"></div>
+  <div class="gradual-blur gb-top" aria-hidden="true">
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+    <div class="gb-layer"></div><div class="gb-layer"></div><div class="gb-layer"></div>
+  </div>
   <div class="container contact-inner">
     <span class="eyebrow reveal">Order</span>
     <h2 class="reveal">Order Your Jar</h2>
     <div class="contact-sub reveal">Delivery available across all of Jakarta</div>
 
+    <p class="contact-quote reveal">
+      Every jar is made to order — because a preserve this careful
+      deserves to arrive at the peak of its promise.
+    </p>
+
     <a href="https://wa.me/6222813374568" class="wa-btn magnetic" data-magnetic="20"
-       target="_blank" rel="noopener noreferrer">
+       target="_blank" rel="noopener noreferrer" data-cursor="WhatsApp">
       <!-- WhatsApp SVG -->
       <svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor">
         <path d="M16 3C9 3 3.4 8.6 3.4 15.6c0 2.5.7 4.9 2 7L3 29l6.6-2.3c2 .9 4.2 1.3 6.4 1.3 7 0 12.6-5.6 12.6-12.6S23 3 16 3zm7.4 17.9c-.3.8-1.7 1.5-2.4 1.6-.6 0-1.4.1-2.3-.1-.5-.2-1.2-.4-2.1-.8-3.7-1.6-6.1-5.3-6.3-5.6-.2-.3-1.5-2-1.5-3.8 0-1.8.9-2.7 1.3-3.1.3-.3.8-.4 1-.4h.7c.2 0 .6-.1.9.7.3.8 1.1 2.7 1.2 2.9.1.2.1.4 0 .6-.1.2-.2.4-.4.6-.2.2-.4.4-.5.6-.2.2-.4.4-.2.8.2.4 1 1.7 2.2 2.7 1.5 1.3 2.8 1.7 3.2 1.9.4.2.6.2.8-.1.2-.2.9-1.1 1.1-1.4.2-.4.5-.3.8-.2.3.1 2.1 1 2.5 1.2.4.2.6.3.7.4.1.2.1.9-.2 1.6z"/>
       </svg>
-      <span>+62 228 1337 4568</span>
+      <span>Let's discuss details</span>
     </a>
-    <p class="wa-small reveal">Message us to place your order</p>
+    <p class="wa-small reveal">A personal conversation — not a cart checkout.</p>
+
+    <!-- Feature grid -->
+    <div class="contact-features reveal">
+      <div class="cfeat">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+          <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+        </svg>
+        <div class="cfeat-title">Same-day Delivery</div>
+        <div class="cfeat-txt">Order before 2 PM and your jar arrives the same afternoon, anywhere in Jakarta.</div>
+      </div>
+      <div class="cfeat">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+          <path d="M4 7h16l-1.5 11a2 2 0 0 1-2 1.8H7.5a2 2 0 0 1-2-1.8L4 7Z"/>
+          <path d="M9 7V5a3 3 0 0 1 6 0v2"/>
+        </svg>
+        <div class="cfeat-title">Gift Wrapping</div>
+        <div class="cfeat-txt">Hand-tied with silk ribbon and a monogrammed note card — ready for any occasion.</div>
+      </div>
+      <div class="cfeat">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+          <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6Z"/>
+        </svg>
+        <div class="cfeat-title">Bespoke Orders</div>
+        <div class="cfeat-txt">Weddings, corporate gifting, private events — message us for custom batches and labels.</div>
+      </div>
+    </div>
 
     <!-- Ornament divider -->
     <div class="ornament reveal">
@@ -1073,7 +1482,34 @@ a,button,.magnetic,.spot-card{cursor:none}
       <img data-src="./images/photo_5.jpg" alt="Maison Rosé emblem" />
     </div>
 
-    <div class="ornament reveal">
+    <div class="contact-meta reveal">
+      <div class="cmeta-item">Hours<strong>Mon — Sun · 9am → 8pm</strong></div>
+      <div class="cmeta-item">Kitchen<strong>Kebayoran Baru, Jakarta</strong></div>
+      <div class="cmeta-item">Press &amp; Inquiries<strong>hello@maisonrose.id</strong></div>
+    </div>
+
+    <div class="contact-social reveal" aria-label="Social links">
+      <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram" data-cursor="Instagram">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="5"/>
+          <circle cx="12" cy="12" r="4"/>
+          <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+        </svg>
+      </a>
+      <a href="https://wa.me/6222813374568" target="_blank" rel="noopener" aria-label="WhatsApp" data-cursor="WhatsApp">
+        <svg width="18" height="18" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+          <path d="M26.6 5.4A14.8 14.8 0 0 0 16.1.9C7.9.9 1.2 7.6 1.2 15.8c0 2.6.7 5.2 2 7.5L1.1 31l7.9-2.1a14.9 14.9 0 0 0 7.1 1.8h.1c8.2 0 14.9-6.7 14.9-14.9 0-4-1.6-7.7-4.5-10.4zM16.1 28.2h-.1a12.4 12.4 0 0 1-6.3-1.7l-.5-.3-4.7 1.2 1.2-4.6-.3-.5a12.4 12.4 0 0 1-1.9-6.5c0-6.9 5.6-12.5 12.5-12.5 3.3 0 6.5 1.3 8.8 3.7a12.4 12.4 0 0 1 3.7 8.8c0 6.9-5.6 12.4-12.4 12.4zm6.8-9.3c-.4-.2-2.2-1.1-2.6-1.2-.3-.1-.6-.2-.9.2-.3.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.6-.6-3-1.8-1.1-1-1.9-2.2-2.1-2.6-.2-.4 0-.6.2-.8l.6-.7c.2-.2.3-.4.4-.6.1-.2.1-.5 0-.7-.1-.2-.9-2.2-1.2-3-.3-.8-.7-.7-.9-.7l-.8-.1c-.3 0-.7.1-1.1.5s-1.4 1.4-1.4 3.4 1.4 3.9 1.6 4.2c.2.3 2.8 4.3 6.8 6 1 .4 1.7.7 2.3.9.9.3 1.8.2 2.5.2.8-.1 2.2-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.2-.4-.3-.8-.5z"/>
+        </svg>
+      </a>
+      <a href="mailto:hello@maisonrose.id" aria-label="Email" data-cursor="Email">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="5" width="18" height="14" rx="2"/>
+          <path d="M3 7l9 6 9-6"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="ornament reveal" style="margin-top:2.5rem">
       <span class="line"></span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
         <circle cx="12" cy="12" r="3" />
@@ -1105,79 +1541,289 @@ a,button,.magnetic,.spot-card{cursor:none}
 
 <script>
 /* =========================================================
-   A. PRELOADER
+   A. CRITICAL ASSET PRELOAD (hero frames + images)
+   Everything must be ready before the preloader fades out,
+   so there is no flicker, no pop-in, no jank.
    ========================================================= */
-window.addEventListener('load', () => {
+const FRAME_COUNT = 240;
+const FRAME_PATH  = i => `./frames/ezgif-frame-${String(i+1).padStart(3,'0')}.jpg`;
+const frames = new Array(FRAME_COUNT);       // decoded Image objects
+let framesLoaded = 0;
+const criticalFramesReady = { resolve:null };
+const criticalFramesPromise = new Promise(r => criticalFramesReady.resolve = r);
+
+/* Preload every frame. First 48 frames (20%) gate the preloader;
+   the rest keep streaming in parallel so scroll-playback is seamless. */
+function preloadFrames(){
+  const CRITICAL = 48;
+  let resolved = false;
+  const bar = document.getElementById('plBarFill');
+  for(let i=0; i<FRAME_COUNT; i++){
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = img.onerror = () => {
+      framesLoaded++;
+      if(bar) bar.style.width = (framesLoaded / FRAME_COUNT * 100) + '%';
+      if(!resolved && framesLoaded >= CRITICAL){
+        resolved = true;
+        criticalFramesReady.resolve();
+      }
+    };
+    img.src = FRAME_PATH(i);
+    frames[i] = img;
+  }
+}
+preloadFrames();
+
+/* Preload every other page image up front — luxury sites feel rough
+   when images pop in during scroll. Cost: ~1.5–2MB, loads in parallel. */
+function preloadImages(){
+  const imgs = Array.from(document.querySelectorAll('img[data-src]'));
+  return Promise.all(imgs.map(img => new Promise(res => {
+    const loader = new Image();
+    loader.onload = loader.onerror = () => {
+      img.src = img.dataset.src;
+      img.classList.add('is-loaded');
+      res();
+    };
+    loader.src = img.dataset.src;
+  })));
+}
+const imagesReady = preloadImages();
+
+/* =========================================================
+   B. PRELOADER — hides only once hero frames + all images ready
+   ========================================================= */
+const pageLoaded = new Promise(r => window.addEventListener('load', r));
+
+Promise.all([criticalFramesPromise, imagesReady, pageLoaded]).then(() => {
+  // small pause so the typographic preloader breathes
   setTimeout(() => {
     const pl = document.getElementById('preloader');
     pl.classList.add('hide');
     setTimeout(() => pl.remove(), 900);
-  }, 1500);
+    // Allow scroll now (prevent scrolling during preload)
+    document.documentElement.style.overflow = '';
+    if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
+  }, 600);
 });
 
-/* =========================================================
-   B. IMAGE LAZY + FADE-IN
-   ========================================================= */
-(function initImages(){
-  const imgs = document.querySelectorAll('img[data-src]');
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if(e.isIntersecting){
-        const img = e.target;
-        img.src = img.dataset.src;
-        img.onload = () => img.classList.add('is-loaded');
-        img.onerror = () => img.classList.add('is-loaded');
-        io.unobserve(img);
-      }
-    });
-  }, {rootMargin:'200px'});
-  imgs.forEach(img => io.observe(img));
-})();
+// Lock scroll during preload
+document.documentElement.style.overflow = 'hidden';
 
 /* =========================================================
-   C. CUSTOM CURSOR (dot + ring with lerp)
+   C. GHOST CURSOR — dot + ring with lerp + snap + label
+   Ring gently "ghosts" toward the cursor, grows on interactive
+   elements, fully snaps & conforms over product cards, and shows
+   a contextual caption for elements with data-cursor.
    ========================================================= */
 (function initCursor(){
   if(matchMedia('(hover:none)').matches) return;
-  const dot  = document.querySelector('.cursor-dot');
-  const ring = document.querySelector('.cursor-ring');
+  const dot   = document.querySelector('.cursor-dot');
+  const ring  = document.querySelector('.cursor-ring');
+  const label = document.getElementById('cursorLabel');
   let mx = innerWidth/2, my = innerHeight/2;
   let rx = mx, ry = my;
+  let rw = 40, rh = 40, tw = 40, th = 40;
+  let snapRect = null;
+
   window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
   function tick(){
-    rx += (mx - rx) * 0.15;
-    ry += (my - ry) * 0.15;
+    const lerp = snapRect ? 0.22 : 0.18;
+    if(snapRect){
+      // Ghost over the element: ring snaps to its bounds, dot hides
+      const cx = snapRect.left + snapRect.width/2;
+      const cy = snapRect.top  + snapRect.height/2;
+      rx += (cx - rx) * lerp;
+      ry += (cy - ry) * lerp;
+      tw = snapRect.width;
+      th = snapRect.height;
+    } else {
+      rx += (mx - rx) * lerp;
+      ry += (my - ry) * lerp;
+    }
+    rw += (tw - rw) * 0.2;
+    rh += (th - rh) * 0.2;
+
     dot.style.transform  = `translate(${mx}px,${my}px) translate(-50%,-50%)`;
+    ring.style.width  = rw + 'px';
+    ring.style.height = rh + 'px';
     ring.style.transform = `translate(${rx}px,${ry}px) translate(-50%,-50%)`;
+
+    if(label.dataset.visible === '1'){
+      label.style.transform = `translate(${mx}px,${my}px) translate(-50%,-180%) scale(1)`;
+    }
     requestAnimationFrame(tick);
   }
   tick();
-  document.querySelectorAll('a,button,.magnetic,.spot-card').forEach(el => {
-    el.addEventListener('mouseenter', () => ring.classList.add('is-active'));
-    el.addEventListener('mouseleave', () => ring.classList.remove('is-active'));
+
+  const interactive = document.querySelectorAll('a,button,.magnetic');
+  interactive.forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      ring.classList.add('is-active', 'is-link');
+      tw = 72; th = 72;
+      const cap = el.dataset.cursor;
+      if(cap){
+        label.textContent = cap;
+        label.classList.add('is-visible');
+        label.dataset.visible = '1';
+      }
+    });
+    el.addEventListener('mouseleave', () => {
+      ring.classList.remove('is-active','is-link');
+      tw = 40; th = 40;
+      label.classList.remove('is-visible');
+      label.dataset.visible = '0';
+    });
+  });
+
+  // Snap over cards/blocks — ring morphs into an oval around the element,
+  // while the small dot stays visible at the mouse position INSIDE the oval.
+  const snapSelector = [
+    '.spot-card',
+    '.ticker-item',
+    '.testimonial',
+    '.cfeat',
+    '.cafe-sign',
+    '.cafe-address',
+    '.origin-pill',
+    '.contact-logo',
+    '.contact-social a'
+  ].join(',');
+  document.querySelectorAll(snapSelector).forEach(el => {
+    const onDark = el.closest('.contact, .cafe, .origin, .hero') !== null;
+    el.addEventListener('mouseenter', () => {
+      snapRect = el.getBoundingClientRect();
+      ring.classList.add('is-card','is-snap');
+      if(onDark){ ring.classList.add('on-dark'); dot.classList.add('on-dark'); }
+      else { dot.classList.add('on-card'); }
+    });
+    el.addEventListener('mousemove', () => {
+      snapRect = el.getBoundingClientRect();
+    });
+    el.addEventListener('mouseleave', () => {
+      snapRect = null;
+      ring.classList.remove('is-card','is-snap','on-dark');
+      dot.classList.remove('on-card','on-dark');
+      tw = 40; th = 40;
+    });
+  });
+
+  // Refresh cached rects on scroll/resize
+  window.addEventListener('scroll', () => {
+    if(snapRect){
+      const active = document.querySelector(snapSelector.split(',').map(s => s.trim()+':hover').join(','));
+      if(active) snapRect = active.getBoundingClientRect();
+    }
+  }, { passive:true });
+})();
+
+/* =========================================================
+   C2. HAMBURGER / MOBILE MENU TOGGLE
+   ========================================================= */
+(function initMobileMenu(){
+  const burger = document.getElementById('navBurger');
+  const menu   = document.getElementById('mobileMenu');
+  if(!burger || !menu) return;
+
+  const setOpen = (open) => {
+    burger.classList.toggle('is-open', open);
+    menu.classList.toggle('is-open', open);
+    burger.setAttribute('aria-expanded', String(open));
+    menu.setAttribute('aria-hidden', String(!open));
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+  };
+
+  burger.addEventListener('click', () => {
+    setOpen(!menu.classList.contains('is-open'));
+  });
+
+  // Close on any link click
+  menu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => setOpen(false));
+  });
+
+  // Close on escape
+  window.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && menu.classList.contains('is-open')) setOpen(false);
   });
 })();
 
 /* =========================================================
-   D. LENIS SMOOTH SCROLL
+   C3. TICKER — GSAP-driven scroll + caption sync
+   On hover the tween's timeScale smoothly drops to 0.12 (very
+   slow but still moving). On leave it smoothly returns to 1.
+   No CSS animation = no restart / jump when hover ends.
    ========================================================= */
+(function initTicker(){
+  const ticker = document.querySelector('.ticker');
+  const track  = document.querySelector('.ticker-track');
+  const items  = document.querySelectorAll('.ticker-item');
+  const caps   = document.querySelectorAll('.ticker-caption .cap');
+  if(!ticker || !track || !items.length) return;
+
+  // Continuous scroll via GSAP. Track content is duplicated in HTML,
+  // so xPercent:-50 loops seamlessly.
+  const tween = gsap.to(track, {
+    xPercent: -50,
+    duration: 40,
+    ease: 'none',
+    repeat: -1
+  });
+
+  // Smooth timeScale changes instead of pausing.
+  const slowTo = (scale) => gsap.to(tween, {
+    timeScale: scale,
+    duration: 0.9,
+    ease: 'power2.out',
+    overwrite: true
+  });
+
+  ticker.addEventListener('mouseenter', () => slowTo(0.12));
+  ticker.addEventListener('mouseleave', () => slowTo(1));
+
+  // Caption sync — hovering a tile activates its caption. Auto-cycles when idle.
+  if(!caps.length) return;
+  let activeIdx = 0, autoTimer = null;
+
+  const setActive = (idx) => {
+    activeIdx = idx;
+    caps.forEach(c => c.classList.toggle('is-active', +c.dataset.idx === idx));
+  };
+  const startAuto = () => {
+    stopAuto();
+    autoTimer = setInterval(() => setActive((activeIdx + 1) % caps.length), 3400);
+  };
+  const stopAuto = () => { if(autoTimer){ clearInterval(autoTimer); autoTimer = null; } };
+
+  items.forEach(it => {
+    it.addEventListener('mouseenter', () => {
+      stopAuto();
+      setActive(+it.dataset.cap || 0);
+    });
+    it.addEventListener('mouseleave', () => startAuto());
+  });
+  startAuto();
+})();
+
+/* =========================================================
+   D. LENIS SMOOTH SCROLL — driven by GSAP ticker (single RAF)
+   Having both `requestAnimationFrame(raf)` AND `gsap.ticker.add`
+   caused double-updates and the scroll felt choppy. One source only.
+   ========================================================= */
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 const lenis = new Lenis({
-  duration:1.25,
+  duration:1.2,
   easing:t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
   smoothWheel:true,
   smoothTouch:false,
   wheelMultiplier:1,
+  touchMultiplier:1.5,
 });
-function raf(time){ lenis.raf(time); requestAnimationFrame(raf); }
-requestAnimationFrame(raf);
-
-/* Sync GSAP ScrollTrigger with Lenis */
-if (window.gsap && window.ScrollTrigger){
-  gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
-  lenis.on('scroll', ScrollTrigger.update);
-  gsap.ticker.add((time) => lenis.raf(time * 1000));
-  gsap.ticker.lagSmoothing(0);
-}
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add((time) => lenis.raf(time * 1000));
+gsap.ticker.lagSmoothing(0);
 
 /* Nav anchor links through Lenis */
 document.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -1202,49 +1848,95 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
 })();
 
 /* =========================================================
-   F. HERO SCROLL-DRIVEN VIDEO
+   F. HERO SCROLL-DRIVEN IMAGE SEQUENCE (canvas)
+   240 pre-decoded JPEGs driven by scroll progress.
+   Pre-decoding + canvas draw = no seek jank, perfectly smooth.
    ========================================================= */
-(function initHeroVideo(){
-  const video = document.getElementById('heroVideo');
-  const hero  = document.getElementById('hero');
-  const subEl = document.getElementById('heroSub');
+(function initHeroSequence(){
+  const canvas = document.getElementById('heroCanvas');
+  const hero   = document.getElementById('hero');
+  const subEl  = document.getElementById('heroSub');
+  const ctx    = canvas.getContext('2d', { alpha:false });
 
-  video.pause();
+  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let W = 0, H = 0;
+  const FRAME_W = 1280, FRAME_H = 720;
 
-  let duration = 0;
-  let ready    = false;
-
-  function onReady(){
-    if(ready) return;
-    if(!isFinite(video.duration) || video.duration <= 0) return;
-    duration = video.duration;
-    ready = true;
-    video.classList.add('is-ready');
+  function resize(){
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = canvas.clientWidth;
+    H = canvas.clientHeight;
+    canvas.width  = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    draw(state.frame);
   }
-  video.addEventListener('loadedmetadata', onReady);
-  video.addEventListener('loadeddata', onReady);
-  video.addEventListener('canplay', onReady);
 
-  // Scroll-driven playback
-  gsap.to({}, {
-    scrollTrigger:{
-      trigger:hero,
-      start:'top top',
-      end:'bottom bottom',
-      scrub:true,
-      onUpdate:(self) => {
-        if(!ready) return;
-        const t = Math.max(0, Math.min(duration, self.progress * duration));
-        // Guard against Safari readyState quirks
-        try { if(Math.abs(video.currentTime - t) > 0.02) video.currentTime = t; } catch(err) {}
-      }
+  // object-fit: cover equivalent on canvas
+  function draw(frameIdx){
+    const img = frames[Math.max(0, Math.min(FRAME_COUNT-1, frameIdx|0))];
+    if(!img || !img.complete || !img.naturalWidth) return;
+
+    const cw = canvas.width, ch = canvas.height;
+    // Clear
+    ctx.fillStyle = '#0a0507';
+    ctx.fillRect(0, 0, cw, ch);
+
+    // cover math
+    const scale = Math.max(cw / FRAME_W, ch / FRAME_H);
+    const drawW = FRAME_W * scale;
+    const drawH = FRAME_H * scale;
+    const dx = (cw - drawW) / 2;
+    const dy = (ch - drawH) / 2;
+    ctx.drawImage(img, dx, dy, drawW, drawH);
+  }
+
+  // Internal state — target vs displayed for smoothing
+  const state = { target: 0, frame: 0 };
+
+  // Smooth interpolation toward scroll target — absorbs tiny jitter
+  gsap.ticker.add(() => {
+    const next = state.frame + (state.target - state.frame) * 0.22;
+    if(Math.abs(next - state.frame) > 0.02){
+      state.frame = next;
+      draw(state.frame);
     }
   });
 
-  // Float subtitle when hero enters
+  // Scroll -> target frame index
+  // Non-linear mapping: first 150 frames compressed into 40% of scroll (fast flash),
+  // last 90 frames stretched over remaining 60% (slow, savor the pour).
+  const SPLIT_FRAME = 150;
+  const SPLIT_SCROLL = 0.40;
+  const MAX_FRAME = FRAME_COUNT - 1;
   ScrollTrigger.create({
-    trigger:hero, start:'top 90%',
-    onEnter:() => subEl.classList.add('is-visible'),
+    trigger: hero,
+    start: 'top top',
+    end: 'bottom bottom',
+    onUpdate: (self) => {
+      const p = self.progress;
+      let f;
+      if (p <= SPLIT_SCROLL){
+        f = (p / SPLIT_SCROLL) * SPLIT_FRAME;
+      } else {
+        f = SPLIT_FRAME + ((p - SPLIT_SCROLL) / (1 - SPLIT_SCROLL)) * (MAX_FRAME - SPLIT_FRAME);
+      }
+      state.target = f;
+    }
+  });
+
+  // First visible frame + reveal canvas
+  criticalFramesPromise.then(() => {
+    resize();
+    draw(0);
+    canvas.classList.add('is-ready');
+  });
+
+  window.addEventListener('resize', resize);
+
+  // Subtitle float when hero is in view
+  ScrollTrigger.create({
+    trigger: hero, start: 'top 90%',
+    onEnter: () => subEl.classList.add('is-visible'),
   });
 })();
 
