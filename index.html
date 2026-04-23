@@ -17,6 +17,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/framer-motion@10/dist/framer-motion.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <style>
 /* =========================================================
@@ -223,7 +224,7 @@ a,button,.magnetic,.spot-card,
    4. NAVIGATION
    ========================================================= */
 .nav{
-  position:fixed;top:0;left:0;right:0;z-index:1000;
+  position:fixed;top:0;left:0;right:0;z-index:2500;
   padding:22px 0;
   transition:background .5s var(--ease-luxe), padding .5s var(--ease-luxe);
   mix-blend-mode:normal;
@@ -1066,6 +1067,36 @@ a,button,.magnetic,.spot-card,
   .section{padding:5rem 0}
   .section-head{margin-bottom:3rem}
   .ticker-item{width:200px;height:140px}
+
+  /* ---------- MOBILE PERFORMANCE OVERRIDES ----------
+     These kill the expensive GPU effects that were making the page
+     crawl on phones (the user reported it was "очень лагучий"). */
+
+  /* Hero is shorter on phones — 220vh of scroll-scrubbed canvas is
+     overkill when there are just 40 frames. 140vh keeps a tasteful
+     scroll playback without dragging the user forever. */
+  .hero{height:140vh}
+
+  /* Drop all backdrop-filter + heavy filter:blur() work. Compositing
+     a stack of blurred layers on mobile GPUs is the biggest cost. */
+  *, *::before, *::after{
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+  .blur-text{filter:none}
+  .blur-text.is-revealed{filter:none}
+
+  /* Kill promotion of lots of layers — each will-change is a GPU
+     tile on mobile. */
+  .spot-card,.ticker-track,.cafe-sign,.origin-pill,
+  .cursor-dot,.cursor-ring{will-change:auto !important}
+
+  /* Nav background becomes a solid translucent color instead of
+     blurred glass — the blur was one of the main frame-drop causes. */
+  .nav.is-scrolled{background:rgba(10,5,7,.92) !important}
+
+  /* Skip rendering offscreen sections until they near the viewport. */
+  .section{content-visibility:auto;contain-intrinsic-size:900px}
 }
 </style>
 </head>
@@ -1489,7 +1520,7 @@ a,button,.magnetic,.spot-card,
     </div>
 
     <div class="contact-social reveal" aria-label="Social links">
-      <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram" data-cursor="Instagram">
+      <a href="https://www.instagram.com/maisonrose.id/" target="_blank" rel="noopener noreferrer" aria-label="Instagram @maisonrose.id" data-cursor="@maisonrose.id">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <rect x="3" y="3" width="18" height="18" rx="5"/>
           <circle cx="12" cy="12" r="4"/>
@@ -1545,40 +1576,92 @@ a,button,.magnetic,.spot-card,
    Everything must be ready before the preloader fades out,
    so there is no flicker, no pop-in, no jank.
    ========================================================= */
-const FRAME_COUNT = 240;
-const FRAME_PATH  = i => `./frames/ezgif-frame-${String(i+1).padStart(3,'0')}.jpg`;
+const IS_MOBILE = window.matchMedia('(max-width: 760px)').matches
+               || window.matchMedia('(hover: none)').matches;
+window.IS_MOBILE = IS_MOBILE;
+
+/* On mobile, drastically fewer frames (every 6th) — 240 JPEGs decoded
+   on low-end Android / iOS devices is what was causing the jank.
+   On desktop, full 240 for buttery scroll sequence. */
+const FRAME_COUNT = IS_MOBILE ? 40 : 240;
+const FRAME_STRIDE = IS_MOBILE ? 6 : 1;
 const frames = new Array(FRAME_COUNT);       // decoded Image objects
-let framesLoaded = 0;
 const criticalFramesReady = { resolve:null };
 const criticalFramesPromise = new Promise(r => criticalFramesReady.resolve = r);
 
-/* Preload every frame. First 48 frames (20%) gate the preloader;
-   the rest keep streaming in parallel so scroll-playback is seamless. */
-function preloadFrames(){
-  const CRITICAL = 48;
-  let resolved = false;
+/* Pull all JPGs out of frames.zip. Shows progress in the preloader bar. */
+async function preloadFrames(){
   const bar = document.getElementById('plBarFill');
-  for(let i=0; i<FRAME_COUNT; i++){
-    const img = new Image();
-    img.decoding = 'async';
-    img.onload = img.onerror = () => {
-      framesLoaded++;
-      if(bar) bar.style.width = (framesLoaded / FRAME_COUNT * 100) + '%';
-      if(!resolved && framesLoaded >= CRITICAL){
-        resolved = true;
-        criticalFramesReady.resolve();
-      }
-    };
-    img.src = FRAME_PATH(i);
-    frames[i] = img;
+  const CRITICAL = Math.min(IS_MOBILE ? 16 : 48, FRAME_COUNT);
+  let resolved = false;
+  let loaded = 0;
+
+  const bumpBar = () => {
+    if (bar) bar.style.width = (loaded / FRAME_COUNT * 100) + '%';
+    if (!resolved && loaded >= CRITICAL){
+      resolved = true;
+      criticalFramesReady.resolve();
+    }
+  };
+
+  try {
+    const res = await fetch('./frames.zip');
+    if (!res.ok) throw new Error('zip fetch failed: ' + res.status);
+    const buf = await res.arrayBuffer();
+    const zip = await JSZip.loadAsync(buf);
+
+    // Frames are named ezgif-frame-001.jpg … ezgif-frame-240.jpg.
+    // Collect + sort lexicographically (zero-padded names sort correctly).
+    const allNames = Object.keys(zip.files)
+      .filter(n => /\.jpe?g$/i.test(n) && !zip.files[n].dir)
+      .sort();
+
+    // Pick frames we actually need (every Nth on mobile).
+    const picked = [];
+    for (let i = 0; i < allNames.length; i += FRAME_STRIDE){
+      picked.push(allNames[i]);
+      if (picked.length >= FRAME_COUNT) break;
+    }
+
+    await Promise.all(picked.map(async (name, i) => {
+      const blob = await zip.files[name].async('blob');
+      const url  = URL.createObjectURL(blob);
+      const img  = new Image();
+      img.decoding = 'async';
+      await new Promise(r => {
+        img.onload = img.onerror = r;
+        img.src = url;
+      });
+      frames[i] = img;
+      loaded++;
+      bumpBar();
+    }));
+
+    if (!resolved){ resolved = true; criticalFramesReady.resolve(); }
+  } catch (err) {
+    console.error('[frames.zip] load failed:', err);
+    // Never leave the preloader hanging.
+    criticalFramesReady.resolve();
   }
 }
 preloadFrames();
 
-/* Preload every other page image up front — luxury sites feel rough
-   when images pop in during scroll. Cost: ~1.5–2MB, loads in parallel. */
+/* Preload every page image up front on desktop. On mobile we let the
+   browser lazy-decode — preloading 10+ MB of JPEGs was what kept the
+   phone pinned to 100% CPU for the first few seconds. */
 function preloadImages(){
   const imgs = Array.from(document.querySelectorAll('img[data-src]'));
+  if (IS_MOBILE){
+    imgs.forEach(img => {
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.src = img.dataset.src;
+      // mark loaded once it actually arrives
+      if (img.complete) img.classList.add('is-loaded');
+      else img.addEventListener('load', () => img.classList.add('is-loaded'), { once:true });
+    });
+    return Promise.resolve();
+  }
   return Promise.all(imgs.map(img => new Promise(res => {
     const loader = new Image();
     loader.onload = loader.onerror = () => {
@@ -1626,13 +1709,14 @@ document.documentElement.style.overflow = 'hidden';
   let rx = mx, ry = my;
   let rw = 40, rh = 40, tw = 40, th = 40;
   let snapRect = null;
+  let snapEl   = null;
 
   window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
 
   function tick(){
     const lerp = snapRect ? 0.22 : 0.18;
     if(snapRect){
-      // Ghost over the element: ring snaps to its bounds, dot hides
+      // Ghost over the element: ring snaps to its bounds, dot stays at cursor
       const cx = snapRect.left + snapRect.width/2;
       const cy = snapRect.top  + snapRect.height/2;
       rx += (cx - rx) * lerp;
@@ -1680,6 +1764,8 @@ document.documentElement.style.overflow = 'hidden';
 
   // Snap over cards/blocks — ring morphs into an oval around the element,
   // while the small dot stays visible at the mouse position INSIDE the oval.
+  // Product cards snap to the INNER image rect, so the oval never bleeds
+  // past the card's decorative gold frame or up into the nav.
   const snapSelector = [
     '.spot-card',
     '.ticker-item',
@@ -1691,32 +1777,65 @@ document.documentElement.style.overflow = 'hidden';
     '.contact-logo',
     '.contact-social a'
   ].join(',');
-  document.querySelectorAll(snapSelector).forEach(el => {
+
+  const innerEl = (el) => el.querySelector('.card-img') || el;
+  const insetRect = (r, pad) => ({
+    left: r.left + pad, top: r.top + pad,
+    width:  Math.max(8, r.width  - pad*2),
+    height: Math.max(8, r.height - pad*2),
+    right: r.right - pad, bottom: r.bottom - pad,
+  });
+  const rectFor = (el) => {
+    // Product cards: snap to the image portion only, inset a bit.
+    if (el.classList.contains('spot-card')){
+      return insetRect(innerEl(el).getBoundingClientRect(), 6);
+    }
+    return insetRect(el.getBoundingClientRect(), 4);
+  };
+
+  const enterSnap = (el) => {
+    if (snapEl === el) return;
+    snapEl = el;
+    snapRect = rectFor(el);
     const onDark = el.closest('.contact, .cafe, .origin, .hero') !== null;
-    el.addEventListener('mouseenter', () => {
-      snapRect = el.getBoundingClientRect();
-      ring.classList.add('is-card','is-snap');
-      if(onDark){ ring.classList.add('on-dark'); dot.classList.add('on-dark'); }
-      else { dot.classList.add('on-card'); }
-    });
-    el.addEventListener('mousemove', () => {
-      snapRect = el.getBoundingClientRect();
-    });
-    el.addEventListener('mouseleave', () => {
-      snapRect = null;
-      ring.classList.remove('is-card','is-snap','on-dark');
-      dot.classList.remove('on-card','on-dark');
-      tw = 40; th = 40;
-    });
+    ring.classList.add('is-card','is-snap');
+    ring.classList.toggle('on-dark', onDark);
+    dot.classList.toggle('on-dark', onDark);
+    dot.classList.toggle('on-card', !onDark);
+  };
+  const exitSnap = () => {
+    if (!snapEl) return;
+    snapEl = null;
+    snapRect = null;
+    ring.classList.remove('is-card','is-snap','on-dark');
+    dot.classList.remove('on-card','on-dark');
+    tw = 40; th = 40;
+  };
+
+  const snapEls = Array.from(document.querySelectorAll(snapSelector));
+  snapEls.forEach(el => {
+    el.addEventListener('mouseenter', () => enterSnap(el));
+    el.addEventListener('mousemove',  () => { if (snapEl === el) snapRect = rectFor(el); });
+    el.addEventListener('mouseleave', exitSnap);
   });
 
-  // Refresh cached rects on scroll/resize
-  window.addEventListener('scroll', () => {
-    if(snapRect){
-      const active = document.querySelector(snapSelector.split(',').map(s => s.trim()+':hover').join(','));
-      if(active) snapRect = active.getBoundingClientRect();
+  // Refresh cached rect while scrolling, AND re-check what's under the
+  // cursor — so that scrolling a new block under a stationary mouse
+  // still triggers the oval snap.
+  const handleScrollOrResize = () => {
+    // Fast path: cursor already snapped, just refresh its rect.
+    if (snapEl) {
+      snapRect = rectFor(snapEl);
     }
-  }, { passive:true });
+    // Either way, re-check what's actually under the pointer right now.
+    const under = document.elementFromPoint(mx, my);
+    if (!under){ if (snapEl) exitSnap(); return; }
+    const matched = under.closest(snapSelector);
+    if (matched) enterSnap(matched);
+    else exitSnap();
+  };
+  window.addEventListener('scroll', handleScrollOrResize, { passive:true });
+  window.addEventListener('resize', handleScrollOrResize);
 })();
 
 /* =========================================================
@@ -1767,7 +1886,7 @@ document.documentElement.style.overflow = 'hidden';
   // so xPercent:-50 loops seamlessly.
   const tween = gsap.to(track, {
     xPercent: -50,
-    duration: 40,
+    duration: 22,   // base speed — noticeably faster than before
     ease: 'none',
     repeat: -1
   });
@@ -1813,25 +1932,36 @@ document.documentElement.style.overflow = 'hidden';
    caused double-updates and the scroll felt choppy. One source only.
    ========================================================= */
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
-const lenis = new Lenis({
-  duration:1.2,
-  easing:t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-  smoothWheel:true,
-  smoothTouch:false,
-  wheelMultiplier:1,
-  touchMultiplier:1.5,
-});
-lenis.on('scroll', ScrollTrigger.update);
-gsap.ticker.add((time) => lenis.raf(time * 1000));
-gsap.ticker.lagSmoothing(0);
 
-/* Nav anchor links through Lenis */
+/* On mobile we skip Lenis entirely — JS-driven smooth scroll on a phone
+   fights with native momentum, wastes CPU, and was the biggest source
+   of the laggy feeling the user reported. Native scroll is fluid. */
+let lenis = null;
+if (!IS_MOBILE){
+  lenis = new Lenis({
+    duration:1.2,
+    easing:t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smoothWheel:true,
+    smoothTouch:false,
+    wheelMultiplier:1,
+    touchMultiplier:1.5,
+  });
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add((time) => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
+} else {
+  // Keep ScrollTrigger updated from native scroll events.
+  window.addEventListener('scroll', () => ScrollTrigger.update(), { passive:true });
+}
+
+/* Nav anchor links — Lenis on desktop, native smooth on mobile */
 document.querySelectorAll('a[href^="#"]').forEach(a => {
   a.addEventListener('click', e => {
     const id = a.getAttribute('href');
     if(id.length > 1 && document.querySelector(id)){
       e.preventDefault();
-      lenis.scrollTo(id, {offset:0});
+      if (lenis) lenis.scrollTo(id, {offset:0});
+      else document.querySelector(id).scrollIntoView({ behavior:'smooth', block:'start' });
     }
   });
 });
@@ -1841,10 +1971,12 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
    ========================================================= */
 (function initNav(){
   const nav = document.getElementById('nav');
-  lenis.on('scroll', ({scroll}) => {
-    if(scroll > 80) nav.classList.add('is-scrolled');
+  const onScroll = (y) => {
+    if(y > 80) nav.classList.add('is-scrolled');
     else nav.classList.remove('is-scrolled');
-  });
+  };
+  if (lenis) lenis.on('scroll', ({scroll}) => onScroll(scroll));
+  else window.addEventListener('scroll', () => onScroll(window.scrollY), { passive:true });
 })();
 
 /* =========================================================
@@ -1858,12 +1990,15 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   const subEl  = document.getElementById('heroSub');
   const ctx    = canvas.getContext('2d', { alpha:false });
 
-  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+  // Cap DPR tighter on mobile — a 3× DPR phone painting 240 frames
+  // of 1280×720 is exactly where the lag came from.
+  const DPR_CAP = IS_MOBILE ? 1.25 : 2;
+  let dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
   let W = 0, H = 0;
   const FRAME_W = 1280, FRAME_H = 720;
 
   function resize(){
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
     W = canvas.clientWidth;
     H = canvas.clientHeight;
     canvas.width  = Math.round(W * dpr);
@@ -1903,11 +2038,11 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 
   // Scroll -> target frame index
-  // Non-linear mapping: first 150 frames compressed into 40% of scroll (fast flash),
-  // last 90 frames stretched over remaining 60% (slow, savor the pour).
-  const SPLIT_FRAME = 150;
+  // Non-linear mapping: first ~62% of frames compressed into 40% of scroll
+  // (fast flash), remaining frames stretched over the rest (savor the pour).
+  const SPLIT_FRAME  = Math.round(FRAME_COUNT * 0.625);
   const SPLIT_SCROLL = 0.40;
-  const MAX_FRAME = FRAME_COUNT - 1;
+  const MAX_FRAME    = FRAME_COUNT - 1;
   ScrollTrigger.create({
     trigger: hero,
     start: 'top top',
@@ -2006,6 +2141,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
    K. TILT + SPOTLIGHT ON PRODUCT CARDS
    ========================================================= */
 (function initTilt(){
+  if (IS_MOBILE) return; // tilt + perspective repaints kill phones
   const cards = document.querySelectorAll('.tilt');
   cards.forEach(card => {
     let rect;
@@ -2032,6 +2168,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
    L. MAGNETIC BUTTONS
    ========================================================= */
 (function initMagnetic(){
+  if (IS_MOBILE) return; // magnetic pointer tracking is pointer-only
   const els = document.querySelectorAll('.magnetic');
   els.forEach(el => {
     const strength = parseFloat(el.dataset.magnetic || 18);
@@ -2057,6 +2194,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
    M. CAFÉ BG + ORIGIN PARALLAX
    ========================================================= */
 (function initParallax(){
+  if (IS_MOBILE) return; // scrubbed scroll-parallax forces a relayout each frame
   gsap.to('#cafeBgImg', {
     yPercent:-10, ease:'none',
     scrollTrigger:{ trigger:'#cafe', start:'top bottom', end:'bottom top', scrub:true }
