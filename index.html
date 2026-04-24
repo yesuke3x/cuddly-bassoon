@@ -1125,6 +1125,10 @@ a,button,.magnetic,.spot-card,
   /* Nav background: solid color instead of blurred glass. */
   .nav.is-scrolled{background:rgba(10,5,7,.92) !important}
 
+  /* Hide cursor on narrow viewports too — covers the Claude Preview
+     case where hover:none is false but width ≤ 760px. */
+  .cursor-dot,.cursor-ring,.cursor-label{display:none !important}
+
   /* Lighter card shadows — mobile GPUs struggle with large blurred
      shadow sprites. Replace with a compact subtle shadow. */
   .spot-card,.spot-card:hover{
@@ -1139,10 +1143,14 @@ a,button,.magnetic,.spot-card,
   .reveal{transition:opacity .5s var(--ease-luxe), transform .5s var(--ease-luxe)}
   .reveal.is-visible{transform:none}
 
-  /* Tell the browser to skip rendering offscreen sections entirely.
-     `auto 900px` → width measured naturally, height placeholder 900px,
-     which prevents layout shift when a section scrolls into view. */
-  .section{content-visibility:auto;contain-intrinsic-size:auto 900px}
+  /* NOTE: intentionally NOT using `content-visibility:auto` here.
+     It looked like a perf win — skip rendering offscreen sections —
+     but on phones with tight memory, decoded image bitmaps inside a
+     section that goes content-visibility:hidden can be evicted, and
+     when the user scrolls back the browser has to re-decode (and
+     sometimes re-fetch) them. That's the "everything reloads when I
+     scroll back up" bug the user was hitting. We trade a little more
+     baseline paint cost for images that stay resident. */
 
   /* Reduce long text + font-size jitter on narrow viewports */
   .hero-title{font-size:clamp(3rem, 14vw, 6rem)}
@@ -1151,6 +1159,45 @@ a,button,.magnetic,.spot-card,
   /* Touch targets: cursor doesn't exist, so also kill any hover-only
      heavy transitions to avoid paying for them on every tap. */
   .spot-card{transition:transform .3s var(--ease-luxe)}
+}
+
+/* ================================================================
+   TOUCH DEVICES — kill every hover-only visual.
+   `(hover: none)` is true on phones + tablets regardless of viewport
+   size. Browsers briefly fire :hover on tap, which used to cause
+   visible flashes of scale/shadow/color. We neutralise every hover
+   rule in the stylesheet so a tap stays clean.
+   ================================================================ */
+@media (hover: none){
+  /* Cursor DOM nodes — removed via JS on touch; belt-and-braces. */
+  .cursor-dot,.cursor-ring,.cursor-label{display:none !important}
+
+  /* All :hover selectors below are cursor-only; on touch a quick tap
+     must not paint a hover state. Force the non-hover look. */
+  .nav-links a:hover,
+  .nav-wa:hover,.nav.is-scrolled .nav-wa:hover,
+  .mobile-menu a:hover,
+  .hero-cta:hover,.hero-cta:hover .arrow,
+  .story-img:hover img,
+  .spot-card:hover,.spot-card:hover::before,.spot-card:hover .card-img img,
+  .spot-card .order-btn:hover,.spot-card .order-btn:hover .arrow,
+  .ticker-item:hover,.ticker-item:hover img,.ticker-item:hover::after,
+  .wa-btn:hover,
+  .cfeat:hover,
+  .contact-social a:hover{
+    /* Inherit whatever the non-hover rule produced — no transform,
+       no box-shadow change, no background swap. */
+    transform:none !important;
+    box-shadow:inherit !important;
+    opacity:inherit !important;
+    background:inherit !important;
+    color:inherit !important;
+    border-color:inherit !important;
+  }
+  /* `::after`/`::before` width/opacity animations on hover — freeze them. */
+  .nav-links a:hover::after{width:0 !important}
+  .spot-card:hover::before{opacity:0 !important}
+  .ticker-item:hover::after{opacity:0 !important}
 }
 
 /* Users who explicitly opt out of motion get the same treatment
@@ -1711,24 +1758,27 @@ async function preloadFrames(){
 }
 preloadFrames();
 
-/* Preload every page image up front on desktop. On mobile we let the
-   browser lazy-decode — preloading 10+ MB of JPEGs was what kept the
-   phone pinned to 100% CPU for the first few seconds. */
+/* Preload every page image up front — on mobile too.
+   Earlier we tried `loading="lazy"` on phones to "save bandwidth".
+   The real effect was: images only start downloading when they're
+   near the viewport, so scrolling felt like "waiting for each block
+   to download, one by one". And if the phone evicted a decoded
+   bitmap under memory pressure, scrolling back up re-fetched.
+
+   Fix: eager-load all images in parallel from page start. They end
+   up in the browser cache + decoded, so scrolling is instant and
+   back-scrolling never re-fetches. We do keep `decoding:'async'`
+   so decode doesn't block the main thread. */
 function preloadImages(){
   const imgs = Array.from(document.querySelectorAll('img[data-src]'));
-  if (IS_MOBILE){
-    imgs.forEach(img => {
-      img.loading = 'lazy';
-      img.decoding = 'async';
-      img.src = img.dataset.src;
-      // mark loaded once it actually arrives
-      if (img.complete) img.classList.add('is-loaded');
-      else img.addEventListener('load', () => img.classList.add('is-loaded'), { once:true });
-    });
-    return Promise.resolve();
-  }
   return Promise.all(imgs.map(img => new Promise(res => {
+    // Prep the visible <img> first — once the preloader resolves, the
+    // bitmap is ready to paint without any network round-trip.
+    img.decoding = 'async';
+    // Explicitly NOT loading="lazy" — we want these in cache now.
+    img.loading = 'eager';
     const loader = new Image();
+    loader.decoding = 'async';
     loader.onload = loader.onerror = () => {
       img.src = img.dataset.src;
       img.classList.add('is-loaded');
@@ -1766,7 +1816,18 @@ document.documentElement.style.overflow = 'hidden';
    a contextual caption for elements with data-cursor.
    ========================================================= */
 (function initCursor(){
-  if(matchMedia('(hover:none)').matches) return;
+  // On mobile (touch device OR narrow viewport, e.g. Claude Preview
+  // simulating a phone): remove the cursor DOM nodes entirely. Frees
+  // ~3 composite layers and ensures no hover-only animation ever ticks.
+  // We key on IS_MOBILE (width ≤ 760 OR hover:none), not hover alone,
+  // because a desktop browser shrunk to phone width still reports a
+  // hover-capable pointer.
+  if(IS_MOBILE){
+    document.querySelector('.cursor-dot')?.remove();
+    document.querySelector('.cursor-ring')?.remove();
+    document.getElementById('cursorLabel')?.remove();
+    return;
+  }
   const dot   = document.querySelector('.cursor-dot');
   const ring  = document.querySelector('.cursor-ring');
   const label = document.getElementById('cursorLabel');
@@ -1964,8 +2025,12 @@ document.documentElement.style.overflow = 'hidden';
     overwrite: true
   });
 
-  ticker.addEventListener('mouseenter', () => slowTo(0.12));
-  ticker.addEventListener('mouseleave', () => slowTo(1));
+  // Hover slowdown is pointer-only — on touch devices these never
+  // fire, so we skip registering them to keep the event bus clean.
+  if (!IS_MOBILE){
+    ticker.addEventListener('mouseenter', () => slowTo(0.12));
+    ticker.addEventListener('mouseleave', () => slowTo(1));
+  }
 
   // Pause the tween whenever the ticker is offscreen. GSAP keeps
   // ticking a paused tween's internal state, but it stops running the
@@ -1991,13 +2056,17 @@ document.documentElement.style.overflow = 'hidden';
   };
   const stopAuto = () => { if(autoTimer){ clearInterval(autoTimer); autoTimer = null; } };
 
-  items.forEach(it => {
-    it.addEventListener('mouseenter', () => {
-      stopAuto();
-      setActive(+it.dataset.cap || 0);
+  // Pointer-driven caption swap — skipped on touch. On mobile we just
+  // let the auto-cycle run (every 3.4s).
+  if (!IS_MOBILE){
+    items.forEach(it => {
+      it.addEventListener('mouseenter', () => {
+        stopAuto();
+        setActive(+it.dataset.cap || 0);
+      });
+      it.addEventListener('mouseleave', () => startAuto());
     });
-    it.addEventListener('mouseleave', () => startAuto());
-  });
+  }
   startAuto();
 })();
 
