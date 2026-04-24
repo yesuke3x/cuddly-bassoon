@@ -2,21 +2,30 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0507" />
 <meta name="description" content="Maison Rosé — Handcrafted strawberry preserves by Eva Victoria. Delivered across Jakarta." />
 <title>Maison Rosé — Handcrafted Strawberry Preserves · Jakarta</title>
 
 <!-- ============ GOOGLE FONTS ============ -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
+<!-- Kick the hero frames bundle into the connection queue early.
+     No crossorigin: same-origin fetch uses default 'same-origin'
+     credentials; the preload must match or Chrome warns about an
+     unused preload. -->
+<link rel="preload" href="./frames.zip" as="fetch" />
+
 <!-- ============ CDN LIBRARIES ============ -->
+<!-- framer-motion removed — it wasn't being used (~130KB saved). -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/framer-motion@10/dist/framer-motion.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <style>
@@ -1064,39 +1073,95 @@ a,button,.magnetic,.spot-card,
 
 @media (max-width:760px){
   .nav-inner{padding:0 1rem}
-  .section{padding:5rem 0}
-  .section-head{margin-bottom:3rem}
+  .section{padding:4.5rem 0}
+  .section-head{margin-bottom:2.6rem}
   .ticker-item{width:200px;height:140px}
 
-  /* ---------- MOBILE PERFORMANCE OVERRIDES ----------
-     These kill the expensive GPU effects that were making the page
-     crawl on phones (the user reported it was "очень лагучий"). */
+  /* ================================================================
+     MOBILE PERF PASS — target: buttery-smooth on mid-range phones.
+     We strip every compounding GPU cost: large blur blobs, infinite
+     keyframe animations, stacked backdrop-filters, layer promotions
+     and scroll-scrubbed re-decodes.
+     ================================================================ */
 
-  /* Hero is shorter on phones — 220vh of scroll-scrubbed canvas is
-     overkill when there are just 40 frames. 140vh keeps a tasteful
-     scroll playback without dragging the user forever. */
-  .hero{height:140vh}
+  /* Hero: shorter scroll region. Less scrub distance = less decode
+     churn = fewer dropped frames on low-end GPUs. */
+  .hero{height:130vh}
 
-  /* Drop all backdrop-filter + heavy filter:blur() work. Compositing
-     a stack of blurred layers on mobile GPUs is the biggest cost. */
+  /* Kill every backdrop-filter — compositing blurred glass on mobile
+     GPUs is the single biggest frame-drop cause. */
   *, *::before, *::after{
     backdrop-filter:none !important;
     -webkit-backdrop-filter:none !important;
   }
-  .blur-text{filter:none}
+  .blur-text{filter:none;opacity:1;transform:none}
   .blur-text.is-revealed{filter:none}
 
-  /* Kill promotion of lots of layers — each will-change is a GPU
-     tile on mobile. */
-  .spot-card,.ticker-track,.cafe-sign,.origin-pill,
-  .cursor-dot,.cursor-ring{will-change:auto !important}
+  /* Nuke the giant decorative filter:blur(60–70px) layers. They paint
+     a huge area every single frame — brutal on phones. */
+  .aurora,.aurora::before,.aurora::after,
+  .aurora-dark,.aurora-dark::before,.aurora-dark::after,
+  .silk{display:none !important}
 
-  /* Nav background becomes a solid translucent color instead of
-     blurred glass — the blur was one of the main frame-drop causes. */
+  /* Freeze every infinite background animation. None of these read
+     input — they just burn the compositor. Keeping still shapes looks
+     identical in screenshots and saves hundreds of paints per second. */
+  .hero-title,.section-title,.section .eyebrow,.ticker-track,
+  .silk .silk-a,.silk .silk-b,
+  .origin-pill,.origin-pill::before,
+  .cafe-content::after,.scroll-hint::after,
+  .ticker-item,.spot-card{
+    animation:none !important;
+  }
+  /* Nuclear option for anything we missed — no infinite loops on mobile. */
+  *, *::before, *::after{ animation-iteration-count:1 !important; }
+  /* …but keep the ticker rolling (GSAP-driven, not CSS-animated). */
+
+  /* Kill layer promotion — each will-change is a GPU tile on mobile. */
+  .spot-card,.ticker-track,.cafe-sign,.origin-pill,
+  .cursor-dot,.cursor-ring,.hero-title,.hero-sub,
+  .aurora::before,.aurora::after{ will-change:auto !important }
+
+  /* Nav background: solid color instead of blurred glass. */
   .nav.is-scrolled{background:rgba(10,5,7,.92) !important}
 
-  /* Skip rendering offscreen sections until they near the viewport. */
-  .section{content-visibility:auto;contain-intrinsic-size:900px}
+  /* Lighter card shadows — mobile GPUs struggle with large blurred
+     shadow sprites. Replace with a compact subtle shadow. */
+  .spot-card,.spot-card:hover{
+    box-shadow:0 8px 24px -10px rgba(0,0,0,.25) !important;
+  }
+  .wa-btn,.wa-btn:hover{
+    box-shadow:0 12px 28px -12px rgba(201,169,110,.45) !important;
+  }
+
+  /* Reveal transitions: shorten from 1s → .5s and drop transform cost
+     so the first paint settles fast. */
+  .reveal{transition:opacity .5s var(--ease-luxe), transform .5s var(--ease-luxe)}
+  .reveal.is-visible{transform:none}
+
+  /* Tell the browser to skip rendering offscreen sections entirely.
+     `auto 900px` → width measured naturally, height placeholder 900px,
+     which prevents layout shift when a section scrolls into view. */
+  .section{content-visibility:auto;contain-intrinsic-size:auto 900px}
+
+  /* Reduce long text + font-size jitter on narrow viewports */
+  .hero-title{font-size:clamp(3rem, 14vw, 6rem)}
+  .section-title{font-size:clamp(2.2rem, 9vw, 3.4rem)}
+
+  /* Touch targets: cursor doesn't exist, so also kill any hover-only
+     heavy transitions to avoid paying for them on every tap. */
+  .spot-card{transition:transform .3s var(--ease-luxe)}
+}
+
+/* Users who explicitly opt out of motion get the same treatment
+   regardless of device. */
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+  }
+  .aurora,.aurora-dark,.silk{display:none !important}
 }
 </style>
 </head>
@@ -1583,8 +1648,8 @@ window.IS_MOBILE = IS_MOBILE;
 /* On mobile, drastically fewer frames (every 6th) — 240 JPEGs decoded
    on low-end Android / iOS devices is what was causing the jank.
    On desktop, full 240 for buttery scroll sequence. */
-const FRAME_COUNT = IS_MOBILE ? 40 : 240;
-const FRAME_STRIDE = IS_MOBILE ? 6 : 1;
+const FRAME_COUNT = IS_MOBILE ? 24 : 240;
+const FRAME_STRIDE = IS_MOBILE ? 10 : 1;
 const frames = new Array(FRAME_COUNT);       // decoded Image objects
 const criticalFramesReady = { resolve:null };
 const criticalFramesPromise = new Promise(r => criticalFramesReady.resolve = r);
@@ -1902,6 +1967,16 @@ document.documentElement.style.overflow = 'hidden';
   ticker.addEventListener('mouseenter', () => slowTo(0.12));
   ticker.addEventListener('mouseleave', () => slowTo(1));
 
+  // Pause the tween whenever the ticker is offscreen. GSAP keeps
+  // ticking a paused tween's internal state, but it stops running the
+  // transform update on `.ticker-track` — which is the actual cost.
+  if ('IntersectionObserver' in window){
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => e.isIntersecting ? tween.play() : tween.pause());
+    }, { rootMargin:'200px 0px' });
+    io.observe(ticker);
+  }
+
   // Caption sync — hovering a tile activates its caption. Auto-cycles when idle.
   if(!caps.length) return;
   let activeIdx = 0, autoTimer = null;
@@ -1990,9 +2065,10 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   const subEl  = document.getElementById('heroSub');
   const ctx    = canvas.getContext('2d', { alpha:false });
 
-  // Cap DPR tighter on mobile — a 3× DPR phone painting 240 frames
-  // of 1280×720 is exactly where the lag came from.
-  const DPR_CAP = IS_MOBILE ? 1.25 : 2;
+  // Cap DPR HARD on mobile. A 3× DPR phone painting 40 frames of
+  // 1280×720 @3× is ~12 MP per frame — the single biggest lag source.
+  // 1.0 looks identical on mobile viewports and halves the fill rate.
+  const DPR_CAP = IS_MOBILE ? 1 : 2;
   let dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
   let W = 0, H = 0;
   const FRAME_W = 1280, FRAME_H = 720;
@@ -2028,14 +2104,25 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   // Internal state — target vs displayed for smoothing
   const state = { target: 0, frame: 0 };
 
-  // Smooth interpolation toward scroll target — absorbs tiny jitter
-  gsap.ticker.add(() => {
-    const next = state.frame + (state.target - state.frame) * 0.22;
-    if(Math.abs(next - state.frame) > 0.02){
-      state.frame = next;
-      draw(state.frame);
-    }
-  });
+  // Smooth interpolation toward scroll target — absorbs tiny jitter.
+  // On mobile we skip the lerp: redraw only when the integer frame
+  // index actually changed, so we do ~24 draws across the whole hero
+  // scroll rather than ~200.
+  if (IS_MOBILE){
+    let last = -1;
+    gsap.ticker.add(() => {
+      const idx = state.target | 0;
+      if (idx !== last){ last = idx; state.frame = idx; draw(idx); }
+    });
+  } else {
+    gsap.ticker.add(() => {
+      const next = state.frame + (state.target - state.frame) * 0.22;
+      if(Math.abs(next - state.frame) > 0.02){
+        state.frame = next;
+        draw(state.frame);
+      }
+    });
+  }
 
   // Scroll -> target frame index
   // Non-linear mapping: first ~62% of frames compressed into 40% of scroll
@@ -2079,6 +2166,19 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
    G. SPLIT-TEXT HEADINGS (GSAP stagger)
    ========================================================= */
 (function initSplitText(){
+  // Mobile: a single opacity fade per heading instead of a staggered
+  // per-character GSAP animation. Per-char split on a phone is dozens
+  // of layout spans + a 40-step stagger — huge cost for ~0 visual gain.
+  if (IS_MOBILE){
+    document.querySelectorAll('[data-split]').forEach(el => {
+      el.style.opacity = '0';
+      ScrollTrigger.create({
+        trigger:el, start:'top 88%',
+        onEnter:() => gsap.to(el, { opacity:1, duration:.6, ease:'power2.out' })
+      });
+    });
+    return;
+  }
   document.querySelectorAll('[data-split]').forEach(el => {
     const words = el.textContent.trim().split(/\s+/);
     el.innerHTML = words.map(w =>
