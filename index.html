@@ -2165,10 +2165,12 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     draw(state.frame);
   }
 
-  // object-fit: cover equivalent on canvas
+  // object-fit: cover equivalent on canvas. Returns true on successful
+  // paint, false if the source frame wasn't ready yet — callers use the
+  // return value to know whether to retry.
   function draw(frameIdx){
     const img = frames[Math.max(0, Math.min(FRAME_COUNT-1, frameIdx|0))];
-    if(!img || !img.complete || !img.naturalWidth) return;
+    if(!img || !img.complete || !img.naturalWidth) return false;
 
     const cw = canvas.width, ch = canvas.height;
     // Clear
@@ -2182,6 +2184,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     const dx = (cw - drawW) / 2;
     const dy = (ch - drawH) / 2;
     ctx.drawImage(img, dx, dy, drawW, drawH);
+    return true;
   }
 
   // Internal state — target vs displayed for smoothing
@@ -2195,7 +2198,13 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     let last = -1;
     gsap.ticker.add(() => {
       const idx = state.target | 0;
-      if (idx !== last){ last = idx; state.frame = idx; draw(idx); }
+      if (idx === last) return;
+      // Only commit `last` when the draw actually painted. If the
+      // frame hasn't loaded yet, leave `last` alone so we'll retry
+      // every tick until the image arrives. Otherwise the very first
+      // paint can fail (frame 0 not yet decoded when criticalFrames
+      // resolves) and the canvas stays blank forever.
+      if (draw(idx)) { last = idx; state.frame = idx; }
     });
   } else {
     gsap.ticker.add(() => {
@@ -2229,11 +2238,22 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     }
   });
 
-  // First visible frame + reveal canvas
+  // First visible frame + reveal canvas. We retry until frame 0 is
+  // actually available — `criticalFramesPromise` resolves when ANY
+  // 16 frames have loaded (in parallel from the zip), and frame 0
+  // isn't guaranteed to be among them on the first tick. Without
+  // this retry the canvas would stay black until the user scrolled.
   criticalFramesPromise.then(() => {
     resize();
-    draw(0);
-    canvas.classList.add('is-ready');
+    const showWhenReady = () => {
+      if (draw(0)) {
+        canvas.classList.add('is-ready');
+      } else {
+        // Frame 0 not decoded yet — try again next animation frame.
+        requestAnimationFrame(showWhenReady);
+      }
+    };
+    showWhenReady();
   });
 
   window.addEventListener('resize', resize);
