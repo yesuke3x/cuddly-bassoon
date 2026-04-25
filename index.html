@@ -1138,10 +1138,24 @@ a,button,.magnetic,.spot-card,
     box-shadow:0 12px 28px -12px rgba(201,169,110,.45) !important;
   }
 
-  /* Reveal transitions: shorten from 1s → .5s and drop transform cost
-     so the first paint settles fast. */
-  .reveal{transition:opacity .5s var(--ease-luxe), transform .5s var(--ease-luxe)}
-  .reveal.is-visible{transform:none}
+  /* CRITICAL FIX: on mobile, don't gate content visibility on
+     ScrollTrigger. If a trigger doesn't fire (rare race after
+     preloader / viewport changes), the section stays at opacity:0
+     forever → user sees a white screen below the carousel. We make
+     every scroll-revealed element visible by default; the JS path
+     that adds `.is-visible` becomes a no-op. */
+  .reveal,
+  .reveal.is-visible,
+  [data-split],
+  [data-blur],
+  .blur-text,
+  .testimonial,
+  .testimonial.is-visible{
+    opacity:1 !important;
+    transform:none !important;
+    filter:none !important;
+    transition:none !important;
+  }
 
   /* NOTE: intentionally NOT using `content-visibility:auto` here.
      It looked like a perf win — skip rendering offscreen sections —
@@ -2235,19 +2249,10 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
    G. SPLIT-TEXT HEADINGS (GSAP stagger)
    ========================================================= */
 (function initSplitText(){
-  // Mobile: a single opacity fade per heading instead of a staggered
-  // per-character GSAP animation. Per-char split on a phone is dozens
-  // of layout spans + a 40-step stagger — huge cost for ~0 visual gain.
-  if (IS_MOBILE){
-    document.querySelectorAll('[data-split]').forEach(el => {
-      el.style.opacity = '0';
-      ScrollTrigger.create({
-        trigger:el, start:'top 88%',
-        onEnter:() => gsap.to(el, { opacity:1, duration:.6, ease:'power2.out' })
-      });
-    });
-    return;
-  }
+  // Mobile: skip the per-character GSAP split entirely AND skip the
+  // ScrollTrigger fade. The CSS mobile override forces opacity:1, so
+  // we just leave the headings as-is. Reliable, no race conditions.
+  if (IS_MOBILE) return;
   document.querySelectorAll('[data-split]').forEach(el => {
     const words = el.textContent.trim().split(/\s+/);
     el.innerHTML = words.map(w =>
@@ -2269,6 +2274,15 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
    H. BLUR TEXT REVEAL
    ========================================================= */
 (function initBlurText(){
+  // Mobile: just mark everything revealed up front. The CSS mobile
+  // override neutralises the blur/opacity anyway, but adding the
+  // class keeps the JS contract clean for any future reads.
+  if (IS_MOBILE){
+    document.querySelectorAll('[data-blur], .blur-text').forEach(el => {
+      el.classList.add('blur-text','is-revealed');
+    });
+    return;
+  }
   document.querySelectorAll('[data-blur], .blur-text').forEach(el => {
     el.classList.add('blur-text');
     ScrollTrigger.create({
@@ -2282,6 +2296,12 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
    I. GENERIC REVEAL
    ========================================================= */
 (function initReveal(){
+  // Mobile: every `.reveal` gets `is-visible` immediately. No scroll
+  // dependency = no blank-section race.
+  if (IS_MOBILE){
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('is-visible'));
+    return;
+  }
   document.querySelectorAll('.reveal').forEach(el => {
     ScrollTrigger.create({
       trigger:el, start:'top 88%',
@@ -2295,6 +2315,11 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
    ========================================================= */
 (function initTestimonials(){
   const items = document.querySelectorAll('#testimonialList .testimonial');
+  // Mobile: show all testimonials immediately, no staggered timer.
+  if (IS_MOBILE){
+    items.forEach(el => el.classList.add('is-visible'));
+    return;
+  }
   ScrollTrigger.create({
     trigger:'#testimonialList',
     start:'top 80%',
